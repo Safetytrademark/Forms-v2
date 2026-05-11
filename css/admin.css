@@ -405,3 +405,75 @@ body { min-height: 100dvh; }
   color: var(--text-muted);
   font-size: 14px;
 }
+
+/* ── Delivery cards ───────────────────────────────────────────────────────── */
+.delivery-card {
+  background: var(--surface-flat);
+  border: 1px solid var(--border-strong);
+  border-left: 4px solid var(--tm-navy);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.delivery-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.delivery-status-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.delivery-item-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.delivery-item-chip {
+  font-size: 12px;
+  background: var(--surface-flat-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 3px 10px;
+  color: var(--text);
+}
+.delivery-item-chip strong { color: var(--text); }
+
+.delivery-card-notes {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.delivery-card-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.delivery-status-select {
+  flex: 1;
+  background: var(--surface-flat-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 8px 12px;
+  cursor: pointer;
+}

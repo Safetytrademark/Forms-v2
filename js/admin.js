@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (lbl) lbl.textContent = profile.full_name || adminCurrentUser.email;
 
   // Load all tabs
-  await Promise.all([loadForemans(), loadProjects(), loadDocuments()]);
+  await Promise.all([loadForemans(), loadProjects(), loadDocuments(), loadDeliveries()]);
 });
 
 // ── Sign out ──────────────────────────────────────────────────────────────────
@@ -254,8 +254,14 @@ async function loadDocuments() {
     return;
   }
 
-  const typeLabel = { change_order: 'Change Order', drawing: 'Drawing', general: 'Document' };
-  const typeIcon  = { change_order: '📋', drawing: '📐', general: '📄' };
+  const typeLabel = {
+    change_order: 'Change Order', drawing: 'Drawing',
+    rfi: 'RFI', submittal: 'Submittal', specification: 'Specification', general: 'Document'
+  };
+  const typeIcon = {
+    change_order: '📋', drawing: '📐',
+    rfi: '🔄', submittal: '📩', specification: '📑', general: '📄'
+  };
 
   wrap.innerHTML = docs.map(d => `
     <div class="admin-table-row">
@@ -343,6 +349,93 @@ async function deleteDocument(docId, filePath) {
   // Remove from DB
   await sbClient.from('documents').delete().eq('id', docId);
   await loadDocuments();
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  DELIVERIES TAB
+// ═════════════════════════════════════════════════════════════════════════════
+async function loadDeliveries() {
+  const pendingWrap = document.getElementById('deliveriesPending');
+  const historyWrap = document.getElementById('deliveriesHistory');
+  if (!pendingWrap) return;
+
+  const { data: reqs, error } = await sbClient
+    .from('delivery_requests')
+    .select('*, projects(name), profiles(full_name)')
+    .order('requested_at', { ascending: false });
+
+  if (error) {
+    pendingWrap.innerHTML = '<div class="admin-empty">Could not load deliveries.</div>';
+    return;
+  }
+
+  const pending = (reqs || []).filter(r => r.status === 'pending' || r.status === 'in_transit');
+  const history = (reqs || []).filter(r => r.status === 'delivered' || r.status === 'cancelled');
+
+  pendingWrap.innerHTML = pending.length
+    ? pending.map(renderDeliveryCard).join('')
+    : '<div class="admin-empty">No pending delivery requests. 🎉</div>';
+
+  historyWrap.innerHTML = history.length
+    ? history.map(r => renderDeliveryCard(r, true)).join('')
+    : '<div class="admin-empty">No delivery history yet.</div>';
+}
+
+function renderDeliveryCard(req, compact = false) {
+  const statusColors = { pending: 'var(--warning)', in_transit: 'var(--info)', delivered: 'var(--success)', cancelled: 'var(--error)' };
+  const statusLabels = { pending: '⏳ Pending', in_transit: '🚛 In Transit', delivered: '✅ Delivered', cancelled: '❌ Cancelled' };
+  const color = statusColors[req.status] || 'var(--text-muted)';
+
+  const itemsList = formatDeliveryItems(req.items);
+  const neededBy  = req.needed_by ? `Needed by: <strong>${formatDate(req.needed_by)}</strong>` : '';
+
+  const actions = compact ? '' : `
+    <div class="delivery-card-actions">
+      <select class="delivery-status-select" onchange="updateDeliveryStatus('${req.id}', this.value)">
+        <option value="pending"    ${req.status==='pending'    ? 'selected':''}>⏳ Pending</option>
+        <option value="in_transit" ${req.status==='in_transit' ? 'selected':''}>🚛 In Transit</option>
+        <option value="delivered"  ${req.status==='delivered'  ? 'selected':''}>✅ Delivered</option>
+        <option value="cancelled"  ${req.status==='cancelled'  ? 'selected':''}>❌ Cancelled</option>
+      </select>
+    </div>`;
+
+  return `
+    <div class="delivery-card" style="border-left-color:${color}">
+      <div class="delivery-card-header">
+        <div>
+          <div class="admin-cell-name">${esc(req.projects?.name || 'Unknown project')}</div>
+          <div class="admin-cell-meta">${esc(req.profiles?.full_name || 'Unknown foreman')} · ${formatDate(req.requested_at)} ${neededBy ? '· '+neededBy : ''}</div>
+        </div>
+        <span class="delivery-status-pill" style="background:${color}20;color:${color}">${statusLabels[req.status] || req.status}</span>
+      </div>
+      <div class="delivery-item-list">${itemsList || '<em>No items specified</em>'}</div>
+      ${req.notes ? `<div class="delivery-card-notes">📝 ${esc(req.notes)}</div>` : ''}
+      ${actions}
+    </div>`;
+}
+
+function formatDeliveryItems(items) {
+  if (!items) return '';
+  const lines = [];
+  const blockSizes = ['20cm', '25cm', '30cm'];
+  const blockTypes = {
+    standards_2h: 'Standards 2H', bondbeams: 'Bondbeams',
+    halves: 'Halves', multiblock: 'Multiblock', squints: 'Squints'
+  };
+  blockSizes.forEach(size => {
+    if (!items[size]) return;
+    Object.entries(items[size]).forEach(([type, qty]) => {
+      if (qty > 0) lines.push(`<span class="delivery-item-chip">${size} ${blockTypes[type] || type}: <strong>${qty} plt</strong></span>`);
+    });
+  });
+  if (items.mortar_tek > 0) lines.push(`<span class="delivery-item-chip">Mortar Tek: <strong>${items.mortar_tek} plt</strong></span>`);
+  if (items.blockfill   > 0) lines.push(`<span class="delivery-item-chip">Blockfill: <strong>${items.blockfill} plt</strong></span>`);
+  return lines.join('');
+}
+
+async function updateDeliveryStatus(id, status) {
+  await sbClient.from('delivery_requests').update({ status }).eq('id', id);
+  await loadDeliveries();
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

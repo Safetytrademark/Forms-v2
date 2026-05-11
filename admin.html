@@ -30,9 +30,10 @@
 
 <!-- ── Tab Nav ──────────────────────────────────────────────────────────── -->
 <div class="admin-tabs">
-  <button class="admin-tab active" data-tab="foremans" onclick="switchTab('foremans')">👷 Foremans</button>
-  <button class="admin-tab" data-tab="projects"  onclick="switchTab('projects')">🏗️ Projects</button>
-  <button class="admin-tab" data-tab="documents" onclick="switchTab('documents')">📄 Documents</button>
+  <button class="admin-tab active" data-tab="foremans"   onclick="switchTab('foremans')">👷 Foremans</button>
+  <button class="admin-tab" data-tab="projects"          onclick="switchTab('projects')">🏗️ Projects</button>
+  <button class="admin-tab" data-tab="documents"         onclick="switchTab('documents')">📄 Documents</button>
+  <button class="admin-tab" data-tab="deliveries"        onclick="switchTab('deliveries')">📦 Deliveries</button>
 </div>
 
 <!-- ── Main Content ──────────────────────────────────────────────────────── -->
@@ -97,9 +98,12 @@
       <div class="field-group">
         <label class="field-label">Type</label>
         <select class="field-input field-select" id="docType">
-          <option value="general">Document</option>
+          <option value="general">General Document</option>
           <option value="change_order">Change Order</option>
           <option value="drawing">Drawing</option>
+          <option value="rfi">RFI</option>
+          <option value="submittal">Submittal</option>
+          <option value="specification">Specification</option>
         </select>
       </div>
 
@@ -123,6 +127,26 @@
     </div>
     <div id="documentsList" class="admin-table-wrap">
       <div class="admin-loading">Loading documents…</div>
+    </div>
+  </section>
+
+  <!-- ── Deliveries Tab ──────────────────────────────────────────────────── -->
+  <section class="admin-panel" id="tab-deliveries">
+    <div class="admin-section-header">
+      <h2 class="admin-section-title">Delivery Requests</h2>
+      <p class="admin-section-sub">Block and material delivery requests submitted by foremans.</p>
+    </div>
+
+    <!-- Pending -->
+    <div class="admin-card-title" style="margin-bottom:12px;font-size:16px;font-weight:700;">⏳ Pending &amp; In Transit</div>
+    <div id="deliveriesPending">
+      <div class="admin-loading">Loading…</div>
+    </div>
+
+    <!-- History -->
+    <div class="admin-card-title" style="margin-top:28px;margin-bottom:12px;font-size:16px;font-weight:700;">📋 History</div>
+    <div id="deliveriesHistory">
+      <div class="admin-loading">Loading…</div>
     </div>
   </section>
 

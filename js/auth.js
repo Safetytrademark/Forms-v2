@@ -119,6 +119,10 @@ function updateHeaderForUser(profile) {
   const adminBtn = document.getElementById('adminBtn');
   if (adminBtn) adminBtn.style.display = profile.role === 'admin' ? 'flex' : 'none';
 
+  // Show delivery button for everyone
+  const deliveryBtn = document.getElementById('deliveryBtn');
+  if (deliveryBtn) deliveryBtn.style.display = 'flex';
+
   // Always show logout button
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) logoutBtn.style.display = 'flex';
@@ -253,8 +257,14 @@ async function showDocumentsDrawer(projectName) {
     return;
   }
 
-  const typeLabel = { change_order: 'Change Order', drawing: 'Drawing', general: 'Document' };
-  const typeIcon  = { change_order: '📋', drawing: '📐', general: '📄' };
+  const typeLabel = {
+    change_order: 'Change Order', drawing: 'Drawing',
+    rfi: 'RFI', submittal: 'Submittal', specification: 'Specification', general: 'Document'
+  };
+  const typeIcon = {
+    change_order: '📋', drawing: '📐',
+    rfi: '🔄', submittal: '📩', specification: '📑', general: '📄'
+  };
 
   list.innerHTML = docs.map(d => `
     <a class="doc-item" href="${d.file_url}" target="_blank" rel="noopener">

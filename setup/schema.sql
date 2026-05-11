@@ -3,20 +3,8 @@
 -- Run this entire file in: Supabase Dashboard → SQL Editor → New Query → Run
 -- ═══════════════════════════════════════════════════════════════════════════
 
--- ── Helper: check if current user is admin (bypasses RLS safely) ─────────────
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT COALESCE(
-    (SELECT role = 'admin' FROM profiles WHERE id = auth.uid()),
-    false
-  );
-$$;
-
 -- ── PROFILES (extends auth.users) ────────────────────────────────────────────
+-- Must be created BEFORE is_admin() so the function can reference it.
 CREATE TABLE IF NOT EXISTS public.profiles (
   id          UUID        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name   TEXT        NOT NULL DEFAULT '',
@@ -25,6 +13,22 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- ── Helper: check if current user is admin (bypasses RLS safely) ─────────────
+-- Defined AFTER profiles table so the SQL body resolves correctly.
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN COALESCE(
+    (SELECT role = 'admin' FROM profiles WHERE id = auth.uid()),
+    false
+  );
+END;
+$$;
 
 CREATE POLICY "profiles: own read"        ON public.profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "profiles: own update"      ON public.profiles FOR UPDATE USING (auth.uid() = id);
