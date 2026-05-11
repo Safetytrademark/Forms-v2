@@ -42,6 +42,12 @@ async function onAuthSuccess(user) {
 
   currentProfile = profile;
 
+  // First-time login: if name not set yet, ask for it before showing the app
+  if (!profile.full_name || !profile.full_name.trim()) {
+    showProfileSetup();
+    return;
+  }
+
   // Fetch projects assigned to this user
   window.userProjects = await loadUserProjects();
 
@@ -118,10 +124,53 @@ function updateHeaderForUser(profile) {
   if (logoutBtn) logoutBtn.style.display = 'flex';
 }
 
+// ── Profile setup (first login — name missing) ────────────────────────────────
+function showProfileSetup() {
+  document.getElementById('loginScreen').style.display        = 'none';
+  document.getElementById('profileSetupScreen').style.display = 'flex';
+  document.getElementById('mainApp').style.display            = 'none';
+  const nb = document.querySelector('.nav-bar');
+  const pw = document.querySelector('.progress-wrap');
+  if (nb) nb.style.display = 'none';
+  if (pw) pw.style.display = 'none';
+  setTimeout(() => document.getElementById('profileNameInput')?.focus(), 100);
+}
+
+async function saveProfileName() {
+  const input = document.getElementById('profileNameInput');
+  const errEl = document.getElementById('profileSetupError');
+  const btn   = document.getElementById('profileSetupBtn');
+  const name  = (input?.value || '').trim();
+
+  if (!name) { if (errEl) errEl.textContent = 'Please enter your name.'; return; }
+  if (errEl) errEl.textContent = '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  const { error } = await sbClient
+    .from('profiles')
+    .update({ full_name: name })
+    .eq('id', currentUser.id);
+
+  if (error) {
+    if (errEl) errEl.textContent = 'Could not save. Try again.';
+    if (btn) { btn.disabled = false; btn.textContent = 'Continue →'; }
+    return;
+  }
+
+  // Update local profile and proceed to app
+  currentProfile.full_name = name;
+  document.getElementById('profileSetupScreen').style.display = 'none';
+  window.userProjects = await loadUserProjects();
+  updateHeaderForUser(currentProfile);
+  showApp();
+  initializeApp();
+}
+
 // ── Show / hide login screen ──────────────────────────────────────────────────
 function showLoginScreen() {
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('mainApp').style.display     = 'none';
+  document.getElementById('loginScreen').style.display        = 'flex';
+  document.getElementById('profileSetupScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display            = 'none';
   const nb = document.querySelector('.nav-bar');
   const pw = document.querySelector('.progress-wrap');
   if (nb) nb.style.display = 'none';

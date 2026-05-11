@@ -41,6 +41,24 @@
   </div>
 </div>
 
+<!-- ── Profile Setup (first login — name not set yet) ────────────────────────── -->
+<div id="profileSetupScreen" style="display:none">
+  <div class="login-card">
+    <div class="login-title">Welcome! 👋</div>
+    <div class="login-subtitle">Before we start, what's your name?</div>
+
+    <div class="field-group">
+      <label class="field-label" for="profileNameInput">Your full name</label>
+      <input class="field-input" type="text" id="profileNameInput"
+        placeholder="e.g. John Silva" autocomplete="name" inputmode="text">
+    </div>
+
+    <div class="login-error" id="profileSetupError"></div>
+    <button class="btn btn-next login-btn" id="profileSetupBtn"
+      onclick="saveProfileName()">Continue →</button>
+  </div>
+</div>
+
 <!-- ── Main App (shown after login) ─────────────────────────────────────────── -->
 <div id="mainApp" style="display:none">
 
