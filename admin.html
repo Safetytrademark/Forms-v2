@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Admin Panel — Trademark Safety</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ── Admin Header ──────────────────────────────────────────────────────── -->
+<header class="admin-header">
+  <div class="admin-header-left">
+    <img class="admin-logo" src="assets/TradeMarkMas-Colour-RGB-Lrg.png" alt="Trademark Masonry"
+      onerror="this.style.display='none'">
+    <span class="admin-title">Admin Panel</span>
+  </div>
+  <div class="admin-header-right">
+    <span class="admin-user" id="adminUserLabel"></span>
+    <button class="admin-back-btn" onclick="window.location.href='index.html'">← App</button>
+    <button class="admin-logout-btn" onclick="adminLogout()">Sign Out</button>
+  </div>
+</header>
+
+<!-- ── Tab Nav ──────────────────────────────────────────────────────────── -->
+<div class="admin-tabs">
+  <button class="admin-tab active" data-tab="foremans" onclick="switchTab('foremans')">👷 Foremans</button>
+  <button class="admin-tab" data-tab="projects"  onclick="switchTab('projects')">🏗️ Projects</button>
+  <button class="admin-tab" data-tab="documents" onclick="switchTab('documents')">📄 Documents</button>
+</div>
+
+<!-- ── Main Content ──────────────────────────────────────────────────────── -->
+<main class="admin-main">
+
+  <!-- ── Foremans Tab ─────────────────────────────────────────────────── -->
+  <section class="admin-panel active" id="tab-foremans">
+    <div class="admin-section-header">
+      <h2 class="admin-section-title">Foreman Accounts</h2>
+      <p class="admin-section-sub">Create foreman accounts in the <a href="https://supabase.com/dashboard" target="_blank" rel="noopener" class="admin-link">Supabase Dashboard</a> → Authentication → Users → Add user.</p>
+    </div>
+    <div id="foremansList" class="admin-table-wrap">
+      <div class="admin-loading">Loading foremans…</div>
+    </div>
+  </section>
+
+  <!-- ── Projects Tab ─────────────────────────────────────────────────── -->
+  <section class="admin-panel" id="tab-projects">
+    <div class="admin-section-header">
+      <h2 class="admin-section-title">Projects</h2>
+    </div>
+
+    <!-- Add project form -->
+    <div class="admin-card">
+      <div class="admin-card-title">Add New Project</div>
+      <div class="admin-row">
+        <input class="field-input admin-input" type="text" id="newProjectName"
+          placeholder="e.g. 26TM003 - Contractor - Site Name">
+        <button class="admin-btn-primary" onclick="addProject()">Add</button>
+      </div>
+      <div class="admin-form-error" id="projectAddError"></div>
+    </div>
+
+    <div id="projectsList" class="admin-table-wrap">
+      <div class="admin-loading">Loading projects…</div>
+    </div>
+  </section>
+
+  <!-- ── Documents Tab ────────────────────────────────────────────────── -->
+  <section class="admin-panel" id="tab-documents">
+    <div class="admin-section-header">
+      <h2 class="admin-section-title">Documents</h2>
+      <p class="admin-section-sub">Upload change orders, drawings and other documents per project. Foremans assigned to that project will see them in the app.</p>
+    </div>
+
+    <!-- Upload form -->
+    <div class="admin-card">
+      <div class="admin-card-title">Upload Document</div>
+
+      <div class="field-group">
+        <label class="field-label">Project</label>
+        <select class="field-input field-select" id="docProjectSelect">
+          <option value="">Select project…</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Title</label>
+        <input class="field-input" type="text" id="docTitle" placeholder="e.g. Change Order #12">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Type</label>
+        <select class="field-input field-select" id="docType">
+          <option value="general">Document</option>
+          <option value="change_order">Change Order</option>
+          <option value="drawing">Drawing</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">File (PDF, image…)</label>
+        <input class="field-input" type="file" id="docFile" accept=".pdf,.png,.jpg,.jpeg,.heic,.dwg">
+      </div>
+
+      <div class="admin-form-error" id="docUploadError"></div>
+      <button class="admin-btn-primary" id="docUploadBtn" onclick="uploadDocument()">⬆️ Upload</button>
+    </div>
+
+    <!-- Existing docs list -->
+    <div class="admin-section-header" style="margin-top:24px">
+      <h2 class="admin-section-title" style="font-size:16px">Uploaded Documents</h2>
+      <div class="admin-row" style="margin-top:8px">
+        <select class="field-input field-select" id="docFilterSelect" onchange="loadDocuments()" style="max-width:320px">
+          <option value="">All projects</option>
+        </select>
+      </div>
+    </div>
+    <div id="documentsList" class="admin-table-wrap">
+      <div class="admin-loading">Loading documents…</div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── Assign Projects Modal ─────────────────────────────────────────────── -->
+<div id="assignModal" class="admin-modal-overlay" style="display:none" onclick="closeAssignModal(event)">
+  <div class="admin-modal">
+    <div class="admin-modal-header">
+      <span id="assignModalTitle">Assign Projects</span>
+      <button class="docs-drawer-close" onclick="closeAssignModal()">✕</button>
+    </div>
+    <div class="admin-modal-body" id="assignModalBody">
+      <div class="admin-loading">Loading…</div>
+    </div>
+    <div class="admin-modal-footer">
+      <button class="admin-btn-ghost" onclick="closeAssignModal()">Cancel</button>
+      <button class="admin-btn-primary" onclick="saveAssignments()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

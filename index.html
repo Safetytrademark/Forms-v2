@@ -11,8 +11,38 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <!-- Supabase JS client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+<!-- ── Login Screen ─────────────────────────────────────────────────────────── -->
+<div id="loginScreen" style="display:none">
+  <div class="login-card">
+    <img class="login-logo" src="assets/TradeMarkMas-Colour-RGB-Lrg.png" alt="Trademark Masonry"
+      onerror="this.style.display='none'">
+    <div class="login-title">Trademark Safety</div>
+    <div class="login-subtitle">Sign in to continue</div>
+
+    <div class="field-group">
+      <label class="field-label" for="loginEmail">Email</label>
+      <input class="field-input" type="email" id="loginEmail"
+        placeholder="your@email.com" autocomplete="email" inputmode="email">
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="loginPassword">Password</label>
+      <input class="field-input" type="password" id="loginPassword"
+        placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <div class="login-error" id="loginError"></div>
+    <button class="btn btn-next login-btn" id="loginBtn" onclick="handleLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- ── Main App (shown after login) ─────────────────────────────────────────── -->
+<div id="mainApp" style="display:none">
 
 <div class="app">
 
@@ -27,9 +57,13 @@
     <div class="logo-badge" aria-hidden="true">TM</div>
 
     <div class="header-right">
-      <div class="header-subtitle">Safety System</div>
+      <div id="headerSubtitle" class="header-subtitle">Safety System</div>
       <div class="status-row">
         <div class="status-dot" id="backendStatus" title="Checking server..."></div>
+        <button class="header-icon-btn" id="adminBtn"
+          onclick="openAdminPanel()" style="display:none" title="Admin Panel">⚙️</button>
+        <button class="header-icon-btn" id="logoutBtn"
+          onclick="handleLogout()" style="display:none" title="Sign Out">🚪</button>
       </div>
     </div>
   </header>
@@ -166,11 +200,13 @@
 
 </div><!-- /.app -->
 
+</div><!-- /#mainApp -->
+
 <!-- Toast notifications -->
 <div class="toast" id="errorToast" role="alert" aria-live="polite"></div>
 
 <!-- Fixed Nav -->
-<div class="nav-bar">
+<div class="nav-bar" style="display:none">
   <button class="btn btn-back" id="btnBack" style="visibility:hidden">← Back</button>
   <button class="btn btn-next" id="btnNext">Next →</button>
 </div>
@@ -182,6 +218,8 @@
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
 <!-- App scripts (order matters) -->
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/logo.js"></script>
 <script src="js/form-configs.js"></script>
 <script src="js/pdf-generator.js"></script>

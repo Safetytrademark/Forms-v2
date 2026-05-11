@@ -11,11 +11,24 @@ const state = {
   signature: null
 };
 
-// ── Init ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+// DOMContentLoaded just hands off to auth — initializeApp() is called by
+// auth.js after a successful login (or valid existing session).
+document.addEventListener('DOMContentLoaded', () => initAuth());
+
+// ── initializeApp ─────────────────────────────────────────────────────────────
+// Called by auth.js once the user is authenticated and their profile is loaded.
+function initializeApp() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('foremanDate').value = today;
   state.date = today;
+
+  // Pre-fill name from the logged-in profile so foreman doesn't have to type it
+  if (window.currentProfile?.full_name) {
+    state.foremanName = window.currentProfile.full_name;
+    const nameEl = document.getElementById('foremanName');
+    if (nameEl) nameEl.value = state.foremanName;
+  }
 
   checkBackendHealth().then(online => {
     const dot = document.getElementById('backendStatus');
@@ -25,13 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-
   renderStep(1);
   attachNavListeners();
 
   document.getElementById('foremanName').addEventListener('input', e => { state.foremanName = e.target.value.trim(); });
   document.getElementById('foremanDate').addEventListener('input', e => { state.date = e.target.value; });
-});
+}
+
+// ── Admin panel ───────────────────────────────────────────────────────────────
+function openAdminPanel() {
+  window.location.href = 'admin.html';
+}
 
 // ── Navigation ───────────────────────────────────────────────────────────────
 function attachNavListeners() {
@@ -86,35 +103,37 @@ function renderStep(n) {
 function renderStep2() {
   const sel = document.getElementById('projectSelect');
   if (sel) {
-    // Always rebuild the list (foreman name may have changed since last render)
+    // Projects come from Supabase (loaded at login into window.userProjects)
+    const userProjects = window.userProjects || [];
     sel.innerHTML = '<option value="">Select project...</option>';
-    const visibleProjects = getProjectsForForeman(state.foremanName);
-    visibleProjects.forEach(p => {
+    userProjects.forEach(p => {
       const o = document.createElement('option');
       o.value = p; o.textContent = p;
       if (p === state.project) o.selected = true;
       sel.appendChild(o);
     });
-    // Reset project if the current one is no longer visible
-    if (state.project && !visibleProjects.includes(state.project)) {
+    // Reset project if it's no longer in the list
+    if (state.project && !userProjects.includes(state.project)) {
       state.project = '';
     }
     sel.value = state.project || '';
     sel.onchange = e => { state.project = e.target.value; };
 
-    // Show hint if projects are filtered for this foreman
-    const hintId = 'projectFilterHint';
-    let hint = document.getElementById(hintId);
-    if (!hint) {
-      hint = document.createElement('p');
-      hint.id = hintId;
-      hint.style.cssText = 'font-size:11px;color:var(--text-muted);margin-top:5px;';
-      sel.parentNode.appendChild(hint);
-    }
-    if (visibleProjects.length < PROJECTS.length) {
-      hint.textContent = `Showing ${visibleProjects.length} project(s) assigned to ${state.foremanName}.`;
-    } else {
-      hint.textContent = '';
+    // Documents button — opens drawer with docs for the selected project
+    const docsHintId = 'projectDocsHint';
+    let docsHint = document.getElementById(docsHintId);
+    if (!docsHint) {
+      docsHint = document.createElement('button');
+      docsHint.id = docsHintId;
+      docsHint.type = 'button';
+      docsHint.className = 'docs-trigger-btn';
+      docsHint.innerHTML = '📄 View Project Documents';
+      docsHint.addEventListener('click', () => {
+        const proj = document.getElementById('projectSelect').value;
+        if (proj) showDocumentsDrawer(proj);
+        else showToast('Select a project first', 'warning');
+      });
+      sel.parentNode.appendChild(docsHint);
     }
   }
 
@@ -1584,6 +1603,20 @@ async function handleSubmit() {
     }
 
     showSuccessScreen(result, pdfFilename);
+
+    // ── Log submission to Supabase ────────────────────────────────────────────
+    try {
+      if (window.currentUser) {
+        await sbClient.from('submissions').insert({
+          foreman_id:      window.currentUser.id,
+          project_name:    state.project,
+          submission_type: state.submissionType
+        });
+      }
+    } catch (logErr) {
+      console.warn('Could not log submission to Supabase:', logErr);
+    }
+
   } catch (err) {
     console.error(err);
     btn.disabled = false;
@@ -1622,8 +1655,13 @@ function resetApp() {
 
   document.getElementById('typeGrid').innerHTML = '';
   document.getElementById('projectSelect').innerHTML = '<option value="">Select project...</option>';
-  document.getElementById('foremanName').value = '';
   document.getElementById('foremanDate').value = new Date().toISOString().split('T')[0];
+
+  // Re-fill foreman name from logged-in profile (foreman shouldn't re-type each time)
+  const profileName = window.currentProfile?.full_name || '';
+  state.foremanName = profileName;
+  const nameEl = document.getElementById('foremanName');
+  if (nameEl) nameEl.value = profileName;
 
   // Re-enable nav buttons (disabled during submission)
   const btnNext = document.getElementById('btnNext');
