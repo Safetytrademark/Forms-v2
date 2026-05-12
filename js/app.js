@@ -8,7 +8,8 @@ const state = {
   submissionType: '',
   fields: {},
   photos: [],
-  signature: null
+  signature: null,
+  allowedTypes: null
 };
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
@@ -38,11 +39,12 @@ function initializeApp() {
     }
   });
 
-  renderStep(1);
   attachNavListeners();
 
   document.getElementById('foremanName').addEventListener('input', e => { state.foremanName = e.target.value.trim(); });
   document.getElementById('foremanDate').addEventListener('input', e => { state.date = e.target.value; });
+
+  showHomeDashboard();
 }
 
 // ── Admin panel ───────────────────────────────────────────────────────────────
@@ -50,10 +52,144 @@ function openAdminPanel() {
   window.location.href = 'admin.html';
 }
 
+// ── Home Dashboard ─────────────────────────────────────────────────────────────
+const HOME_CATEGORIES = [
+  {
+    icon: '🦺', label: 'Safety Meetings', desc: 'Tailgate & toolbox talks',
+    types: ['Daily Tailgate', 'Weekly Toolbox Talk']
+  },
+  {
+    icon: '🔍', label: 'Equipment Inspections', desc: 'Telehandler, forklift, scaffolding',
+    types: ['Telehandler Inspection', 'Forklift Inspection', 'E-Pallet Jack Inspection', 'Scaffolding Inspection']
+  },
+  {
+    icon: '📋', label: 'Reports & Observations', desc: 'Incidents, hazards, QAQC, photos',
+    types: ['Incident Report', 'Hazard Observation', 'QAQC - Foreman', 'Site Photos Only']
+  },
+  {
+    icon: '⏱️', label: 'Time & Production', desc: 'Timesheets & production reports',
+    types: ['Weekly Timesheet', 'Production Report']
+  },
+  { icon: '📦', label: 'Request Delivery',  desc: 'Blocks, mortar & materials',      action: 'delivery'  },
+  { icon: '📄', label: 'Project Documents', desc: 'Drawings, change orders, RFIs',   action: 'documents' }
+];
+
+function showHomeDashboard() {
+  const homeScreen   = document.getElementById('homeScreen');
+  const appDiv       = document.querySelector('#mainApp .app');
+  const progressWrap = document.querySelector('.progress-wrap');
+  const navBar       = document.querySelector('.nav-bar');
+
+  if (homeScreen)   homeScreen.style.display  = 'block';
+  if (appDiv)       appDiv.style.display      = 'none';
+  if (progressWrap) progressWrap.style.display = 'none';
+  if (navBar)       navBar.style.display      = 'none';
+
+  const hour  = new Date().getHours();
+  const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const first = window.currentProfile?.full_name?.split(' ')[0] || '';
+  const greetEl = document.getElementById('homeGreeting');
+  if (greetEl) greetEl.textContent = `${greet}${first ? ', ' + first : ''}! 👋`;
+
+  state.allowedTypes = null;
+  renderHomeCards();
+}
+
+function renderHomeCards() {
+  const grid = document.getElementById('homeGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const cats = [...HOME_CATEGORIES];
+  if (window.currentProfile?.role === 'admin') {
+    cats.push({ icon: '⚙️', label: 'Admin Panel', desc: 'Manage users, projects & deliveries', action: 'admin' });
+  }
+
+  cats.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    const accent = cat.action === 'delivery' ? ' accent-delivery'
+                 : cat.action === 'admin'    ? ' accent-admin' : '';
+    btn.className = `home-card${accent}`;
+    btn.innerHTML = `
+      <span class="home-card-icon">${cat.icon}</span>
+      <span class="home-card-label">${cat.label}</span>
+      <span class="home-card-desc">${cat.desc}</span>`;
+    btn.addEventListener('click', () => handleHomeCard(cat));
+    grid.appendChild(btn);
+  });
+}
+
+function handleHomeCard(cat) {
+  if (cat.action === 'delivery')  { openDeliveryModal(); return; }
+  if (cat.action === 'documents') { openDocumentPicker(); return; }
+  if (cat.action === 'admin')     { openAdminPanel(); return; }
+  startFormFlow(cat.types);
+}
+
+function startFormFlow(allowedTypes) {
+  state.allowedTypes = allowedTypes || null;
+
+  const homeScreen   = document.getElementById('homeScreen');
+  const appDiv       = document.querySelector('#mainApp .app');
+  const progressWrap = document.querySelector('.progress-wrap');
+  const navBar       = document.querySelector('.nav-bar');
+
+  if (homeScreen)   homeScreen.style.display  = 'none';
+  if (appDiv)       appDiv.style.display      = '';
+  if (progressWrap) progressWrap.style.display = '';
+  if (navBar)       navBar.style.display      = '';
+
+  // Reset submission type if it's no longer in the allowed set
+  if (allowedTypes && state.submissionType && !allowedTypes.includes(state.submissionType)) {
+    state.submissionType = '';
+  }
+  // Clear the type grid so it re-renders with the correct filtered set
+  const typeGrid = document.getElementById('typeGrid');
+  if (typeGrid) typeGrid.innerHTML = '';
+
+  state.currentStep = 1;
+  renderStep(1);
+  updateProgressBar(1);
+  updateNavButtons(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function openDocumentPicker() {
+  const projects = window.userProjects || [];
+  if (projects.length === 0) { showToast('No projects assigned to you', 'warning'); return; }
+  if (projects.length === 1) { showDocumentsDrawer(projects[0]); return; }
+
+  // Multiple projects — show a simple picker overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'doc-picker-overlay';
+  overlay.innerHTML = `
+    <div class="doc-picker-modal">
+      <div class="doc-picker-title">📄 Select Project</div>
+      <div class="doc-picker-list" id="docPickerList"></div>
+      <button class="btn btn-back doc-picker-cancel" style="margin-top:4px">Cancel</button>
+    </div>`;
+
+  const list = overlay.querySelector('#docPickerList');
+  projects.forEach(proj => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'doc-picker-item';
+    btn.textContent = proj;
+    btn.addEventListener('click', () => { overlay.remove(); showDocumentsDrawer(proj); });
+    list.appendChild(btn);
+  });
+
+  overlay.querySelector('.doc-picker-cancel').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 // ── Navigation ───────────────────────────────────────────────────────────────
 function attachNavListeners() {
   document.getElementById('btnBack').addEventListener('click', () => {
     if (state.currentStep > 1) goToStep(state.currentStep - 1);
+    else showHomeDashboard();
   });
   document.getElementById('btnNext').addEventListener('click', () => {
     if (validateStep(state.currentStep)) {
@@ -84,7 +220,8 @@ function updateProgressBar(step) {
 function updateNavButtons(step) {
   const back = document.getElementById('btnBack');
   const next = document.getElementById('btnNext');
-  back.style.visibility = step === 1 ? 'hidden' : 'visible';
+  back.style.visibility = 'visible';
+  back.textContent = step === 1 ? '← Home' : '← Back';
   next.textContent = step === 4 ? '✓ Submit' : 'Next →';
   next.className = step === 4 ? 'btn btn-submit' : 'btn btn-next';
 }
@@ -139,7 +276,10 @@ function renderStep2() {
 
   const grid = document.getElementById('typeGrid');
   if (grid && grid.children.length === 0) {
-    SUBMISSION_TYPES.forEach(t => {
+    const typesToShow = state.allowedTypes
+      ? SUBMISSION_TYPES.filter(t => state.allowedTypes.includes(t.id))
+      : SUBMISSION_TYPES;
+    typesToShow.forEach(t => {
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'type-card' + (state.submissionType === t.id ? ' selected' : '');
@@ -1648,6 +1788,7 @@ function resetApp() {
   state.foremanName = '';
   state.project = '';
   state.submissionType = '';
+  state.allowedTypes = null;
   state.fields = {};
   state.photos = [];
   state.signature = null;
@@ -1669,8 +1810,8 @@ function resetApp() {
   const btnBack = document.getElementById('btnBack');
   if (btnBack) { btnBack.disabled = false; }
 
-  goToStep(1);
   showToast('Ready for next submission', 'success');
+  showHomeDashboard();
 }
 
 function showToast(msg, type = 'info') {
