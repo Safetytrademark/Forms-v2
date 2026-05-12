@@ -369,8 +369,8 @@ async function loadDeliveries() {
     return;
   }
 
-  const pending = (reqs || []).filter(r => r.status === 'requested' || r.status === 'on_schedule');
-  const history = (reqs || []).filter(r => r.status === 'delivered');
+  const pending = (reqs || []).filter(r => ['requested','on_schedule','pending','in_transit'].includes(r.status));
+  const history = (reqs || []).filter(r => ['delivered','cancelled'].includes(r.status));
 
   pendingWrap.innerHTML = pending.length
     ? pending.map(renderDeliveryCard).join('')

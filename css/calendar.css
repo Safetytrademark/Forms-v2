@@ -191,6 +191,13 @@ body { min-height: 100dvh; background: var(--bg-0); }
   line-height: 1.4;
 }
 .cal-chip:hover { opacity: 0.8; }
+.cal-chip[draggable="true"] { cursor: grab; }
+.cal-chip[draggable="true"]:active { cursor: grabbing; }
+.cal-day.drag-over {
+  background: rgba(59,130,246,0.12);
+  outline: 2px dashed #3b82f6;
+  outline-offset: -2px;
+}
 .cal-chip.requested   { background: rgba(245,158,11,0.18); color: #f59e0b; }
 .cal-chip.on_schedule { background: rgba(59,130,246,0.18);  color: #3b82f6; }
 .cal-chip.delivered   { background: rgba(34,197,94,0.18);   color: #22c55e; }

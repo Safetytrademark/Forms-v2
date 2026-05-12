@@ -117,10 +117,14 @@ function renderCalendar() {
       chip.className = `cal-chip ${req.status}`;
       chip.textContent = req.projects?.name || 'Unknown';
       chip.title = `${req.projects?.name} — ${STATUS_LABEL[req.status]}`;
-      chip.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showPopover(e, req);
+      chip.draggable = true;
+      chip.dataset.id = req.id;
+      chip.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('deliveryId', req.id);
+        chip.style.opacity = '0.4';
       });
+      chip.addEventListener('dragend', () => { chip.style.opacity = ''; });
+      chip.addEventListener('click', e => { e.stopPropagation(); showPopover(e, req); });
       dayEl.appendChild(chip);
     });
 
@@ -130,6 +134,21 @@ function renderCalendar() {
       more.textContent = `+${overflow} more`;
       dayEl.appendChild(more);
     }
+
+    // ── Drop target ───────────────────────────────────────────────────────
+    dayEl.addEventListener('dragover', e => {
+      e.preventDefault();
+      dayEl.classList.add('drag-over');
+    });
+    dayEl.addEventListener('dragleave', () => dayEl.classList.remove('drag-over'));
+    dayEl.addEventListener('drop', async e => {
+      e.preventDefault();
+      dayEl.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('deliveryId');
+      if (!id) return;
+      await sbClient.from('delivery_requests').update({ needed_by: dateStr }).eq('id', id);
+      await loadAndRender();
+    });
 
     container.appendChild(dayEl);
     cursor.setDate(cursor.getDate() + 1);
