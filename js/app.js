@@ -9,7 +9,8 @@ const state = {
   fields: {},
   photos: [],
   signature: null,
-  allowedTypes: null
+  allowedTypes: null,
+  fromDashboard: false   // true when type + project were pre-selected on dashboard
 };
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
@@ -65,7 +66,8 @@ async function showHomeDashboard() {
   if (progressWrap) progressWrap.style.display = 'none';
   if (navBar)       navBar.style.display      = 'none';
 
-  state.allowedTypes = null;
+  state.allowedTypes  = null;
+  state.fromDashboard = false;
 
   // Greeting
   const hour  = new Date().getHours();
@@ -138,13 +140,13 @@ async function checkTailgateToday() {
 }
 
 // ── Start form flow for a specific pre-selected type ──────────────────────────
+// Project + type are already known from the dashboard — jump straight to the form.
 function startSpecificFormFlow(type) {
   const projSel = document.getElementById('dashProjectSelect');
   const project = projSel?.value || '';
 
   if (!project) {
     showToast('Please select a project first ↑', 'warning');
-    // Brief visual highlight on the selector
     if (projSel) {
       projSel.focus();
       projSel.classList.add('dash-project-bar-select--pulse');
@@ -153,12 +155,14 @@ function startSpecificFormFlow(type) {
     return;
   }
 
-  state.project       = project;
+  state.project        = project;
   state.submissionType = type;
-  state.allowedTypes  = [type];
+  state.allowedTypes   = [type];
+  state.fromDashboard  = true;
+  state.photos         = [];      // clear any leftover photos from a previous form
 
   const typeGrid = document.getElementById('typeGrid');
-  if (typeGrid) typeGrid.innerHTML = ''; // force re-render on step 2
+  if (typeGrid) typeGrid.innerHTML = '';
 
   const homeScreen   = document.getElementById('homeScreen');
   const appDiv       = document.querySelector('#mainApp .app');
@@ -170,11 +174,12 @@ function startSpecificFormFlow(type) {
   if (progressWrap) progressWrap.style.display = '';
   if (navBar)       navBar.style.display      = '';
 
-  // Start at step 1 (foreman info — always a quick confirm since it's pre-filled)
-  state.currentStep = 1;
-  renderStep(1);
-  updateProgressBar(1);
-  updateNavButtons(1);
+  // Skip steps 1 (info) and 2 (project/type) — both were handled on the dashboard.
+  // Jump directly to step 3 (the actual form).
+  state.currentStep = 3;
+  renderStep(3);
+  updateProgressBar(3);
+  updateNavButtons(3);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -321,8 +326,14 @@ function openDocumentPicker() {
 // ── Navigation ───────────────────────────────────────────────────────────────
 function attachNavListeners() {
   document.getElementById('btnBack').addEventListener('click', () => {
-    if (state.currentStep > 1) goToStep(state.currentStep - 1);
-    else showHomeDashboard();
+    // When type was pre-selected on dashboard, Back from the form returns home
+    if (state.fromDashboard && state.currentStep === 3) {
+      showHomeDashboard();
+    } else if (state.currentStep > 1) {
+      goToStep(state.currentStep - 1);
+    } else {
+      showHomeDashboard();
+    }
   });
   document.getElementById('btnNext').addEventListener('click', () => {
     if (validateStep(state.currentStep)) {
@@ -436,9 +447,26 @@ function renderStep3() {
   const container = document.getElementById('dynamicFields');
   if (!container) return;
   container.innerHTML = '';
-  state.fields    = {};        // ← clear stale field data on every form switch
+  state.fields    = {};        // clear stale field data on every form switch
   state.signature = null;
   window._signaturePad = null;
+
+  // ── Date field (always first — was previously in step 1) ──────────────────
+  const dateWrapper = document.createElement('div');
+  dateWrapper.className = 'field-group';
+  const dateLbl = document.createElement('label');
+  dateLbl.className = 'field-label';
+  dateLbl.htmlFor = 'formStepDate';
+  dateLbl.textContent = 'Date *';
+  const dateInput = document.createElement('input');
+  dateInput.type = 'date';
+  dateInput.className = 'field-input';
+  dateInput.id = 'formStepDate';
+  dateInput.value = state.date;
+  dateInput.addEventListener('change', e => { state.date = e.target.value; });
+  dateWrapper.appendChild(dateLbl);
+  dateWrapper.appendChild(dateInput);
+  container.appendChild(dateWrapper);
 
   // Pre-fill defaults for Daily Tailgate
   if (state.submissionType === 'Daily Tailgate') applyDailyTailgateDefaults();

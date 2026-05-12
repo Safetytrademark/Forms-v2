@@ -2451,10 +2451,9 @@ body::after {
 .dash-item:hover::after { background: rgba(255,199,44,0.04); }
 .dash-item:active { transform: scale(0.96); }
 
-.dash-item-img {
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
+.dash-item-emoji {
+  font-size: 38px;
+  line-height: 1;
   flex-shrink: 0;
 }
 .dash-item-label {
