@@ -1,0 +1,343 @@
+/* ── Login Page ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:            #0a0a0a;
+  --surface:       #141418;
+  --surface-2:     #1c1c22;
+  --border:        rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.13);
+  --text:          #f0f0f0;
+  --text-muted:    #8a8a9a;
+  --accent:        #FFC72C;
+  --accent-dark:   #D89A14;
+  --tm-red:        #8a2a2b;
+  --error:         #f87171;
+  --success:       #4ade80;
+  --radius:        14px;
+  --radius-sm:     8px;
+  --font:          'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Shell ──────────────────────────────────────────────────────────────────── */
+.lp-shell {
+  display: flex;
+  min-height: 100dvh;
+}
+
+/* ── Left hero panel ────────────────────────────────────────────────────────── */
+.lp-hero {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 48px 44px;
+  overflow: hidden;
+  background: #0d0d10;
+}
+
+/* Diagonal accent stripe */
+.lp-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      -55deg,
+      transparent,
+      transparent 18px,
+      rgba(255,199,44,0.045) 18px,
+      rgba(255,199,44,0.045) 20px
+    );
+  pointer-events: none;
+}
+
+/* Bottom-left gradient bloom */
+.lp-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: -80px;
+  width: 440px;
+  height: 440px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(138,42,43,0.28) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.lp-hero-logo {
+  width: 160px;
+  margin-bottom: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.lp-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.lp-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(255,199,44,0.1);
+  border: 1px solid rgba(255,199,44,0.25);
+  border-radius: 999px;
+  padding: 5px 12px;
+  margin-bottom: 20px;
+}
+
+.lp-hero-tag::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.lp-hero-title {
+  font-size: clamp(28px, 3.5vw, 42px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.lp-hero-title span {
+  color: var(--accent);
+}
+
+.lp-hero-sub {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 360px;
+  margin-bottom: 36px;
+}
+
+.lp-hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lp-pill {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 5px 13px;
+}
+
+/* ── Right auth panel ───────────────────────────────────────────────────────── */
+.lp-auth {
+  width: 440px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  position: relative;
+}
+
+/* Subtle top accent line */
+.lp-auth::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--tm-red), var(--accent));
+}
+
+.lp-card {
+  width: 100%;
+  max-width: 360px;
+}
+
+.lp-card-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.lp-card-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+/* ── Tab switcher ───────────────────────────────────────────────────────────── */
+.lp-tabs {
+  display: flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  margin-bottom: 24px;
+  gap: 3px;
+}
+
+.lp-tab {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  font-family: var(--font);
+}
+
+.lp-tab.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+.lp-tab:hover:not(.active) {
+  color: var(--text);
+}
+
+/* ── Forms ──────────────────────────────────────────────────────────────────── */
+.lp-form { display: flex; flex-direction: column; gap: 14px; }
+.lp-form.hidden { display: none; }
+
+.lp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lp-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+}
+
+.lp-input {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lp-input::placeholder { color: var(--text-muted); opacity: 0.6; }
+.lp-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255,199,44,0.1);
+}
+
+/* Code field accent */
+.lp-input--code {
+  border-color: rgba(255,199,44,0.2);
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+.lp-input--code:focus { border-color: var(--accent); }
+
+.lp-code-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* ── Submit button ──────────────────────────────────────────────────────────── */
+.lp-btn {
+  width: 100%;
+  padding: 13px;
+  margin-top: 4px;
+  background: var(--accent);
+  color: #0a0a0a;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.01em;
+}
+.lp-btn:hover  { opacity: 0.88; }
+.lp-btn:active { transform: scale(0.98); }
+.lp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Status messages ────────────────────────────────────────────────────────── */
+.lp-error, .lp-success {
+  font-size: 13px;
+  text-align: center;
+  min-height: 18px;
+  padding: 0 2px;
+  display: none;
+}
+.lp-error   { color: var(--error);   }
+.lp-success { color: var(--success); }
+.lp-error.show, .lp-success.show { display: block; }
+
+/* Divider */
+.lp-divider {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 4px 0;
+  position: relative;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .lp-shell { flex-direction: column; }
+
+  .lp-hero {
+    flex: none;
+    padding: 32px 24px 28px;
+    min-height: auto;
+    justify-content: flex-start;
+  }
+
+  .lp-hero-logo { width: 130px; margin-bottom: 24px; }
+  .lp-hero-tag  { margin-bottom: 14px; }
+  .lp-hero-title { font-size: 26px; margin-bottom: 10px; }
+  .lp-hero-sub   { font-size: 14px; margin-bottom: 20px; }
+  .lp-hero-pills { display: none; }
+
+  .lp-auth {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding: 32px 20px 40px;
+    align-items: flex-start;
+  }
+
+  .lp-card { max-width: 100%; }
+}

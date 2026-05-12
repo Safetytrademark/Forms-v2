@@ -10,36 +10,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=6">
+  <link rel="stylesheet" href="css/styles.css?v=7">
   <!-- Supabase JS client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-<!-- ── Login Screen ─────────────────────────────────────────────────────────── -->
-<div id="loginScreen" style="display:none">
-  <div class="login-card">
-    <img class="login-logo" src="assets/TradeMarkMas-Colour-RGB-Lrg.png" alt="Trademark Masonry"
-      onerror="this.style.display='none'">
-    <div class="login-title">Trademark Safety</div>
-    <div class="login-subtitle">Sign in to continue</div>
-
-    <div class="field-group">
-      <label class="field-label" for="loginEmail">Email</label>
-      <input class="field-input" type="email" id="loginEmail"
-        placeholder="your@email.com" autocomplete="email" inputmode="email">
-    </div>
-
-    <div class="field-group">
-      <label class="field-label" for="loginPassword">Password</label>
-      <input class="field-input" type="password" id="loginPassword"
-        placeholder="••••••••" autocomplete="current-password">
-    </div>
-
-    <div class="login-error" id="loginError"></div>
-    <button class="btn btn-next login-btn" id="loginBtn" onclick="handleLogin()">Sign In</button>
-  </div>
-</div>
 
 <!-- ── Profile Setup (first login — name not set yet) ────────────────────────── -->
 <div id="profileSetupScreen" style="display:none">
@@ -400,14 +375,14 @@
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
 <!-- App scripts (order matters) — bump ?v=N when editing to bust cache -->
-<script src="js/supabase-client.js?v=6"></script>
-<script src="js/auth.js?v=6"></script>
-<script src="js/delivery.js?v=6"></script>
-<script src="js/logo.js?v=6"></script>
-<script src="js/form-configs.js?v=6"></script>
-<script src="js/pdf-generator.js?v=6"></script>
-<script src="js/api.js?v=6"></script>
-<script src="js/app.js?v=6"></script>
+<script src="js/supabase-client.js?v=7"></script>
+<script src="js/auth.js?v=7"></script>
+<script src="js/delivery.js?v=7"></script>
+<script src="js/logo.js?v=7"></script>
+<script src="js/form-configs.js?v=7"></script>
+<script src="js/pdf-generator.js?v=7"></script>
+<script src="js/api.js?v=7"></script>
+<script src="js/app.js?v=7"></script>
 
 </body>
 </html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Trademark Safety — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/login.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="lp-shell">
+
+  <!-- ── Left hero panel ─────────────────────────────────────────────────── -->
+  <div class="lp-hero">
+    <img class="lp-hero-logo"
+      src="assets/TradeMarkMas-Colour-RGB-Lrg.png"
+      alt="Trademark Masonry"
+      onerror="this.style.display='none'">
+
+    <div class="lp-hero-content">
+      <div class="lp-hero-tag">Field Safety Platform</div>
+      <h1 class="lp-hero-title">Built for the team<br>on the <span>ground</span>.</h1>
+      <p class="lp-hero-sub">
+        Submit safety forms, manage equipment inspections,
+        request deliveries, and access project documents —
+        all from your phone.
+      </p>
+      <div class="lp-hero-pills">
+        <span class="lp-pill">🦺 Daily Tailgate</span>
+        <span class="lp-pill">🔍 Inspections</span>
+        <span class="lp-pill">📦 Deliveries</span>
+        <span class="lp-pill">📋 Incident Reports</span>
+        <span class="lp-pill">📄 Documents</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right auth panel ────────────────────────────────────────────────── -->
+  <div class="lp-auth">
+    <div class="lp-card">
+
+      <div class="lp-card-title" id="cardTitle">Welcome back</div>
+      <div class="lp-card-sub"   id="cardSub">Sign in to your account to continue.</div>
+
+      <!-- Tab switcher -->
+      <div class="lp-tabs">
+        <button class="lp-tab active" id="tabSignIn"   onclick="showTab('signin')">Sign In</button>
+        <button class="lp-tab"        id="tabRegister" onclick="showTab('register')">Create Account</button>
+      </div>
+
+      <!-- ── Sign In form ─────────────────────────────────────────────── -->
+      <form class="lp-form" id="formSignIn" onsubmit="event.preventDefault(); handleSignIn()">
+        <div class="lp-field">
+          <label class="lp-label" for="siEmail">Email</label>
+          <input class="lp-input" type="email" id="siEmail"
+            placeholder="your@email.com" autocomplete="email" inputmode="email" required>
+        </div>
+        <div class="lp-field">
+          <label class="lp-label" for="siPassword">Password</label>
+          <input class="lp-input" type="password" id="siPassword"
+            placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+        <div class="lp-error" id="siError"></div>
+        <button class="lp-btn" id="siBtn" type="submit">Sign In →</button>
+      </form>
+
+      <!-- ── Register form ────────────────────────────────────────────── -->
+      <form class="lp-form hidden" id="formRegister" onsubmit="event.preventDefault(); handleRegister()">
+        <div class="lp-field">
+          <label class="lp-label" for="regName">Full Name</label>
+          <input class="lp-input" type="text" id="regName"
+            placeholder="e.g. John Silva" autocomplete="name" inputmode="text" required>
+        </div>
+        <div class="lp-field">
+          <label class="lp-label" for="regEmail">Email</label>
+          <input class="lp-input" type="email" id="regEmail"
+            placeholder="your@email.com" autocomplete="email" inputmode="email" required>
+        </div>
+        <div class="lp-field">
+          <label class="lp-label" for="regPassword">Password</label>
+          <input class="lp-input" type="password" id="regPassword"
+            placeholder="Minimum 6 characters" autocomplete="new-password" minlength="6" required>
+        </div>
+        <div class="lp-field">
+          <label class="lp-label" for="regCode">Company Invite Code</label>
+          <input class="lp-input lp-input--code" type="text" id="regCode"
+            placeholder="Enter the code given by your admin"
+            autocomplete="off" autocorrect="off" autocapitalize="off" required>
+          <div class="lp-code-hint">Ask your manager for the invite code.</div>
+        </div>
+        <div class="lp-error"   id="regError"></div>
+        <div class="lp-success" id="regSuccess"></div>
+        <button class="lp-btn" id="regBtn" type="submit">Create Account →</button>
+      </form>
+
+    </div>
+  </div>
+
+</div><!-- /.lp-shell -->
+
+<script src="js/supabase-client.js"></script>
+<script src="js/login.js"></script>
+
+</body>
+</html>

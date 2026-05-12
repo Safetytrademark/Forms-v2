@@ -1,24 +1,25 @@
 // ── Auth ──────────────────────────────────────────────────────────────────────
-// Handles login screen, session management and user profile loading.
-// After a successful login, calls initializeApp() which lives in app.js.
+// Handles session management and user profile loading.
+// Login / registration lives in login.html + js/login.js.
+// Unauthenticated users are redirected to login.html.
 
 let currentUser    = null;
 let currentProfile = null;
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 async function initAuth() {
-  showLoginScreen();          // default: start hidden until we know auth state
-
   // Check for an existing session (e.g. user refreshed the page)
   const { data: { session } } = await sbClient.auth.getSession();
-  if (session) {
-    await onAuthSuccess(session.user);
+  if (!session) {
+    window.location.href = 'login.html';
+    return;
   }
 
-  // React to sign-in / sign-out events
+  await onAuthSuccess(session.user);
+
+  // React to sign-out events (sign-in is handled by login.html redirecting here)
   sbClient.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN'  && session) await onAuthSuccess(session.user);
-    if (event === 'SIGNED_OUT')            showLoginScreen();
+    if (event === 'SIGNED_OUT') window.location.href = 'login.html';
   });
 }
 
@@ -36,8 +37,8 @@ async function onAuthSuccess(user) {
 
   if (error || !profile) {
     console.error('Profile load error:', error);
-    showLoginError('Could not load your profile. Contact your administrator.');
     await sbClient.auth.signOut();
+    window.location.href = 'login.html';
     return;
   }
 
@@ -134,7 +135,6 @@ function updateHeaderForUser(profile) {
 
 // ── Profile setup (first login — name missing) ────────────────────────────────
 function showProfileSetup() {
-  document.getElementById('loginScreen').style.display        = 'none';
   document.getElementById('profileSetupScreen').style.display = 'flex';
   document.getElementById('mainApp').style.display            = 'none';
   const nb = document.querySelector('.nav-bar');
@@ -174,56 +174,13 @@ async function saveProfileName() {
   initializeApp();
 }
 
-// ── Show / hide login screen ──────────────────────────────────────────────────
-function showLoginScreen() {
-  document.getElementById('loginScreen').style.display        = 'flex';
-  document.getElementById('profileSetupScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display            = 'none';
-  const nb = document.querySelector('.nav-bar');
-  const pw = document.querySelector('.progress-wrap');
-  if (nb) nb.style.display = 'none';
-  if (pw) pw.style.display = 'none';
-}
-
+// ── Show app (after successful auth) ─────────────────────────────────────────
 function showApp() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display     = 'block';
+  document.getElementById('mainApp').style.display = 'block';
   const nb = document.querySelector('.nav-bar');
   const pw = document.querySelector('.progress-wrap');
   if (nb) nb.style.display = '';
   if (pw) pw.style.display = '';
-}
-
-function showLoginError(msg) {
-  const el = document.getElementById('loginError');
-  if (el) el.textContent = msg;
-}
-
-// ── Login form ────────────────────────────────────────────────────────────────
-async function handleLogin() {
-  const email    = (document.getElementById('loginEmail')?.value    ?? '').trim();
-  const password = (document.getElementById('loginPassword')?.value ?? '');
-  const btn      = document.getElementById('loginBtn');
-  const errEl    = document.getElementById('loginError');
-
-  if (!email || !password) {
-    if (errEl) errEl.textContent = 'Please enter your email and password.';
-    return;
-  }
-
-  if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
-  if (errEl) errEl.textContent = '';
-
-  const { error } = await sbClient.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    const msg = error.message === 'Invalid login credentials'
-      ? 'Incorrect email or password.'
-      : error.message;
-    if (errEl) errEl.textContent = msg;
-    if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
-  }
-  // Success is handled by onAuthStateChange → onAuthSuccess
 }
 
 // ── Documents drawer (shown per project in the app) ───────────────────────────
