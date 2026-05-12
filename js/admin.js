@@ -400,13 +400,14 @@ function renderDeliveryCard(req, compact = false) {
     ? `Needed by: <strong>${formatDate(req.needed_by)}</strong>${timeStr}`
     : '';
 
-  const actions = compact ? '' : `
+  const actions = `
     <div class="delivery-card-actions">
       <select class="delivery-status-select" onchange="updateDeliveryStatus('${req.id}', this.value)">
         <option value="requested"   ${req.status==='requested'   ? 'selected':''}>📋 Requested</option>
         <option value="on_schedule" ${req.status==='on_schedule' ? 'selected':''}>🚛 On Schedule</option>
         <option value="delivered"   ${req.status==='delivered'   ? 'selected':''}>✅ Delivered</option>
       </select>
+      <button class="admin-btn-danger" onclick="deleteDelivery('${req.id}')">🗑 Delete</button>
     </div>`;
 
   return `
@@ -445,6 +446,13 @@ function formatDeliveryItems(items) {
 
 async function updateDeliveryStatus(id, status) {
   await sbClient.from('delivery_requests').update({ status }).eq('id', id);
+  await loadDeliveries();
+}
+
+async function deleteDelivery(id) {
+  if (!confirm('Delete this delivery request? This cannot be undone.')) return;
+  const { error } = await sbClient.from('delivery_requests').delete().eq('id', id);
+  if (error) { alert('Could not delete. Try again.'); return; }
   await loadDeliveries();
 }
 
