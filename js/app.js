@@ -52,29 +52,13 @@ function openAdminPanel() {
   window.location.href = 'admin.html';
 }
 
-// ── Home Dashboard ─────────────────────────────────────────────────────────────
-const HOME_CATEGORIES = [
-  {
-    icon: '🦺', label: 'Safety Meetings', desc: 'Tailgate & toolbox talks',
-    types: ['Daily Tailgate', 'Weekly Toolbox Talk']
-  },
-  {
-    icon: '🔍', label: 'Equipment Inspections', desc: 'Telehandler, forklift, scaffolding',
-    types: ['Telehandler Inspection', 'Forklift Inspection', 'E-Pallet Jack Inspection', 'Scaffolding Inspection']
-  },
-  {
-    icon: '📋', label: 'Reports & Observations', desc: 'Incidents, hazards, QAQC, photos',
-    types: ['Incident Report', 'Hazard Observation', 'QAQC - Foreman', 'Site Photos Only']
-  },
-  {
-    icon: '⏱️', label: 'Time & Production', desc: 'Timesheets & production reports',
-    types: ['Weekly Timesheet', 'Production Report']
-  },
-  { icon: '📦', label: 'Request Delivery',  desc: 'Blocks, mortar & materials',      action: 'delivery'  },
-  { icon: '📄', label: 'Project Documents', desc: 'Drawings, change orders, RFIs',   action: 'documents' }
-];
+// ── Home Dashboard 2.0 ─────────────────────────────────────────────────────────
+const DASH_INSPECTION_TYPES = ['Telehandler Inspection','Forklift Inspection','E-Pallet Jack Inspection','Scaffolding Inspection'];
+const DASH_REPORT_TYPES     = ['Incident Report','Hazard Observation','QAQC - Foreman','Site Photos Only'];
+const DASH_TAILGATE_TYPES   = ['Daily Tailgate','Weekly Toolbox Talk'];
+const DASH_TIME_TYPES       = ['Weekly Timesheet','Production Report'];
 
-function showHomeDashboard() {
+async function showHomeDashboard() {
   const homeScreen   = document.getElementById('homeScreen');
   const appDiv       = document.querySelector('#mainApp .app');
   const progressWrap = document.querySelector('.progress-wrap');
@@ -85,46 +69,175 @@ function showHomeDashboard() {
   if (progressWrap) progressWrap.style.display = 'none';
   if (navBar)       navBar.style.display      = 'none';
 
+  state.allowedTypes = null;
+
+  // Greeting
   const hour  = new Date().getHours();
   const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const first = window.currentProfile?.full_name?.split(' ')[0] || '';
-  const greetEl = document.getElementById('homeGreeting');
-  if (greetEl) greetEl.textContent = `${greet}${first ? ', ' + first : ''}! 👋`;
+  const greetEl = document.getElementById('dashGreeting');
+  if (greetEl) greetEl.textContent = `${greet}${first ? ', ' + first : ''} 👋`;
 
-  state.allowedTypes = null;
-  renderHomeCards();
+  // Avatar initial
+  const av = document.getElementById('dashAvatarBtn');
+  if (av) av.textContent = (first[0] || '?').toUpperCase();
+
+  // Admin section toggle
+  const adminSection = document.getElementById('dashAdminSection');
+  if (adminSection) adminSection.hidden = window.currentProfile?.role !== 'admin';
+
+  // Wire card clicks (re-bind every time — replaces previous handlers)
+  document.querySelectorAll('.dash-card[data-action]').forEach(el => {
+    el.onclick = () => handleDashAction(el.dataset.action);
+  });
+
+  // Skeletons in place of metrics, then load
+  setDashSkeletons();
+  try {
+    const stats = await loadDashboardStats();
+    renderDashStats(stats);
+  } catch (err) {
+    console.error('Dashboard stats failed:', err);
+    const sumEl = document.getElementById('dashSummary');
+    if (sumEl) sumEl.textContent = 'Could not load operational status';
+  }
 }
 
-function renderHomeCards() {
-  const grid = document.getElementById('homeGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
+async function loadDashboardStats() {
+  const uid = window.currentUser?.id;
+  if (!uid) return null;
 
-  const cats = [...HOME_CATEGORIES];
-  if (window.currentProfile?.role === 'admin') {
-    cats.push({ icon: '⚙️', label: 'Admin Panel', desc: 'Manage users, projects & deliveries', action: 'admin' });
+  // Monday 00:00 of current week (ISO — Mon-Sun)
+  const now = new Date();
+  const day = now.getDay() || 7; // Sun=0 → 7
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - day + 1);
+  monday.setHours(0,0,0,0);
+
+  const todayStr = now.toISOString().slice(0,10);
+  const weekAgo  = new Date(now.getTime() - 7*24*3600*1000).toISOString();
+
+  const [tailgate, weekSubs, deliveries, weekInsp] = await Promise.all([
+    sbClient.from('submissions')
+      .select('created_at')
+      .eq('foreman_id', uid)
+      .eq('submission_type', 'Daily Tailgate')
+      .gte('created_at', todayStr + 'T00:00:00')
+      .lte('created_at', todayStr + 'T23:59:59')
+      .order('created_at', { ascending: false })
+      .limit(1),
+    sbClient.from('submissions')
+      .select('submission_type, created_at')
+      .eq('foreman_id', uid)
+      .gte('created_at', monday.toISOString()),
+    sbClient.from('delivery_requests')
+      .select('id, needed_by_time, status, project_id')
+      .eq('foreman_id', uid)
+      .eq('needed_by', todayStr)
+      .neq('status', 'delivered')
+      .order('needed_by_time', { ascending: true }),
+    sbClient.from('submissions')
+      .select('submission_type')
+      .eq('foreman_id', uid)
+      .in('submission_type', DASH_INSPECTION_TYPES)
+      .gte('created_at', weekAgo)
+  ]);
+
+  const weekRows  = weekSubs.data || [];
+  const inspWeek  = weekRows.filter(r => DASH_INSPECTION_TYPES.includes(r.submission_type)).length;
+  const repWeek   = weekRows.filter(r => DASH_REPORT_TYPES.includes(r.submission_type)).length;
+  const timesheet = weekRows.find(r => r.submission_type === 'Weekly Timesheet');
+  const inspectedTypes = new Set((weekInsp.data || []).map(r => r.submission_type));
+  const overdue   = Math.max(0, DASH_INSPECTION_TYPES.length - inspectedTypes.size);
+
+  return {
+    tailgateDoneAt: tailgate.data?.[0]?.created_at || null,
+    inspWeek, repWeek, overdue,
+    timesheet: timesheet ? 'Submitted' : 'Pending',
+    deliveries: deliveries.data || []
+  };
+}
+
+function renderDashStats(s) {
+  if (!s) return;
+
+  // Inspections
+  const im = document.getElementById('inspMetric');
+  if (im) im.textContent = `${s.inspWeek} this week`;
+  const ob = document.getElementById('inspOverdueBadge');
+  if (ob) {
+    if (s.overdue > 0) { ob.textContent = `${s.overdue} overdue`; ob.hidden = false; }
+    else ob.hidden = true;
   }
 
-  cats.forEach(cat => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    const accent = cat.action === 'delivery' ? ' accent-delivery'
-                 : cat.action === 'admin'    ? ' accent-admin' : '';
-    btn.className = `home-card${accent}`;
-    btn.innerHTML = `
-      <span class="home-card-icon">${cat.icon}</span>
-      <span class="home-card-label">${cat.label}</span>
-      <span class="home-card-desc">${cat.desc}</span>`;
-    btn.addEventListener('click', () => handleHomeCard(cat));
-    grid.appendChild(btn);
-  });
+  // Reports
+  const rm = document.getElementById('reportsMetric');
+  if (rm) rm.textContent = `${s.repWeek} this week`;
+
+  // Tailgate (urgency-driven)
+  const tg = document.getElementById('tailgateCard');
+  const tgStatus = document.getElementById('tailgateStatus');
+  if (tg && tgStatus) {
+    if (s.tailgateDoneAt) {
+      tg.classList.remove('is-pending');
+      tg.classList.add('is-done');
+      const t = new Date(s.tailgateDoneAt);
+      tgStatus.textContent = `✅ Completed at ${t.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})}`;
+    } else {
+      tg.classList.remove('is-done');
+      tg.classList.add('is-pending');
+      tgStatus.innerHTML = '⚠️ <strong>Pending today</strong>';
+    }
+  }
+
+  // Timesheet
+  const tsEl = document.getElementById('timesheetStatus');
+  if (tsEl) tsEl.textContent = s.timesheet === 'Submitted' ? '✅ Submitted this week' : '○ Not submitted yet';
+
+  // Delivery
+  const dStat = document.getElementById('deliveryStatus');
+  if (dStat) {
+    if (s.deliveries.length === 0) {
+      dStat.textContent = '○ No deliveries today';
+    } else {
+      const next = s.deliveries[0];
+      const time = next.needed_by_time ? ` at ${next.needed_by_time}` : '';
+      dStat.innerHTML = `📦 <strong>${s.deliveries.length} today</strong>${time}`;
+    }
+  }
+
+  // Operational summary line in header
+  const parts = [];
+  if (!s.tailgateDoneAt)    parts.push('🦺 Tailgate pending');
+  if (s.deliveries.length)  parts.push(`📦 ${s.deliveries.length} delivery today`);
+  if (s.overdue)            parts.push(`🔍 ${s.overdue} inspection${s.overdue > 1 ? 's' : ''} overdue`);
+  const sumEl = document.getElementById('dashSummary');
+  if (sumEl) sumEl.textContent = parts.length ? parts.join(' · ') : 'All clear — no pending items today';
+
+  // Notification badge
+  const badge = document.getElementById('dashNotifBadge');
+  if (badge) {
+    const pendCount = (s.tailgateDoneAt ? 0 : 1) + s.overdue;
+    if (pendCount > 0) { badge.textContent = pendCount; badge.hidden = false; }
+    else badge.hidden = true;
+  }
 }
 
-function handleHomeCard(cat) {
-  if (cat.action === 'delivery')  { openDeliveryModal(); return; }
-  if (cat.action === 'documents') { openDocumentPicker(); return; }
-  if (cat.action === 'admin')     { openAdminPanel(); return; }
-  startFormFlow(cat.types);
+function setDashSkeletons() {
+  ['inspMetric','reportsMetric','tailgateStatus','timesheetStatus','deliveryStatus','dashSummary']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<span class="dash-skel"></span>'; });
+}
+
+function handleDashAction(action) {
+  switch (action) {
+    case 'inspections': return startFormFlow(DASH_INSPECTION_TYPES);
+    case 'reports':     return startFormFlow(DASH_REPORT_TYPES);
+    case 'tailgate':    return startFormFlow(DASH_TAILGATE_TYPES);
+    case 'timesheet':   return startFormFlow(DASH_TIME_TYPES);
+    case 'delivery':    return openDeliveryModal();
+    case 'documents':   return openDocumentPicker();
+    case 'admin':       return openAdminPanel();
+  }
 }
 
 function startFormFlow(allowedTypes) {

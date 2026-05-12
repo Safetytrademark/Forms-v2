@@ -2163,79 +2163,144 @@ body::after {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   HOME DASHBOARD (v2)
+   HOME DASHBOARD 2.0 — operational cockpit
    ═══════════════════════════════════════════════════════════════════════════ */
-
-#homeScreen { min-height: 100dvh; background: var(--bg-0); }
-
-.home-wrap {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 32px 16px 80px;
+:root {
+  --dash-blue:   #3b82f6;
+  --dash-purple: #a855f7;
+  --dash-orange: #f59e0b;
+  --dash-green:  #22c55e;
+  --dash-amber:  #eab308;
+  --dash-gray:   #6b7280;
+  --dash-red:    #8a2a2b;
 }
 
-.home-greeting {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--text);
-  margin-bottom: 6px;
+#homeScreen { min-height: 100dvh; background: var(--bg-0); padding-bottom: 32px; }
+.dash-wrap  { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.dash-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom: 24px; }
+.dash-header-left { flex:1; min-width:0; }
+.dash-greeting {
+  font-size: 24px; font-weight: 800; letter-spacing: -0.02em;
+  color: var(--text); margin-bottom: 4px;
+}
+.dash-summary { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+.dash-header-right { display:flex; gap:8px; align-items:center; }
+.dash-icon-btn, .dash-avatar {
+  width:40px; height:40px; border-radius:50%; border:1px solid var(--border-strong);
+  background: var(--surface-flat); display:flex; align-items:center; justify-content:center;
+  font-size:18px; cursor:pointer; position:relative; color:var(--text);
+  transition: border-color var(--t-fast), transform var(--t-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+.dash-icon-btn:hover, .dash-avatar:hover { border-color: var(--text-muted); transform: scale(1.05); }
+.dash-avatar {
+  font-weight:700; font-size:15px;
+  background: linear-gradient(135deg, var(--dash-blue), var(--dash-purple));
+  color:#fff; border-color:transparent;
+}
+.dash-notif-badge {
+  position:absolute; top:-2px; right:-2px; min-width:18px; height:18px; padding:0 5px;
+  border-radius:9px; background:var(--dash-orange); color:#000; font-size:11px;
+  font-weight:700; display:flex; align-items:center; justify-content:center;
 }
 
-.home-sub {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-bottom: 28px;
+/* ── Sections ───────────────────────────────────────────────────────────── */
+.dash-section { display:grid; gap:12px; margin-bottom:16px; }
+.dash-primary { grid-template-columns: 1fr; }
+.dash-ops     { grid-template-columns: 1fr; }
+.dash-docs    { grid-template-columns: 1fr; }
+@media (min-width: 600px) {
+  .dash-primary { grid-template-columns: 1fr 1fr; }
+  .dash-ops     { grid-template-columns: repeat(3, 1fr); }
+}
+.dash-section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); margin: 8px 4px;
 }
 
-/* ── Card grid ───────────────────────────────────────────────────────────── */
-.home-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-@media (min-width: 480px) {
-  .home-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-.home-card {
+/* ── Card base ──────────────────────────────────────────────────────────── */
+.dash-card {
   background: var(--surface-flat);
   border: 1px solid var(--border-strong);
   border-radius: var(--r-lg);
-  padding: 20px 14px 18px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  padding: 18px;
+  font-family: var(--font);
   text-align: left;
   cursor: pointer;
+  display: flex; flex-direction: column; gap: 8px;
   transition: border-color var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
-  font-family: var(--font);
+  position: relative; overflow: hidden;
   -webkit-tap-highlight-color: transparent;
+  color: var(--text);
 }
-.home-card:hover {
-  border-color: var(--tm-navy);
-  box-shadow: var(--glow-navy);
-  transform: translateY(-2px);
+.dash-card::before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background: var(--accent, transparent); transition: width var(--t-fast);
 }
-.home-card:active { transform: scale(0.97); }
+.dash-card:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px -8px rgba(0,0,0,0.4); border-color: var(--accent); }
+.dash-card:hover::before { width: 4px; }
+.dash-card:active { transform: scale(0.98); }
 
-.home-card-icon  { font-size: 32px; line-height: 1; }
-.home-card-label { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.3; }
-.home-card-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+/* ── Accents (set --accent + cosmetic flourishes) ───────────────────────── */
+.accent-blue   { --accent: var(--dash-blue);   }
+.accent-purple { --accent: var(--dash-purple); }
+.accent-orange { --accent: var(--dash-orange); }
+.accent-green  { --accent: var(--dash-green);  }
+.accent-amber  { --accent: var(--dash-amber);  }
+.accent-gray   { --accent: var(--dash-gray);   }
+.accent-red    { --accent: var(--dash-red);    }
 
-/* ── Card accents ─────────────────────────────────────────────────────────── */
-.home-card.accent-delivery { border-color: rgba(245,158,11,0.35); }
-.home-card.accent-delivery:hover {
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 3px rgba(245,158,11,0.12), var(--glow-navy);
+/* ── Primary cards ──────────────────────────────────────────────────────── */
+.dash-card-primary { padding: 22px 18px; min-height: 140px; }
+.dash-card-head    { display:flex; justify-content:space-between; align-items:center; }
+.dash-card-icon    { font-size: 24px; line-height: 1; }
+.dash-card-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+  background: rgba(245,158,11,0.15); color: var(--dash-orange);
+  border: 1px solid rgba(245,158,11,0.3);
+}
+.dash-card-metric { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin-top: 4px; }
+.dash-card-label  { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.dash-card-cta    { font-size: 13px; font-weight: 700; color: var(--accent); margin-top: auto; padding-top: 8px; }
+
+/* ── Ops cards ──────────────────────────────────────────────────────────── */
+.dash-card-ops    { min-height: 110px; padding: 16px; }
+.dash-card-status { font-size: 14px; color: var(--text); font-weight: 600; line-height: 1.3; }
+
+/* ── Tailgate urgency state ─────────────────────────────────────────────── */
+.dash-card.is-pending {
+  border-color: var(--dash-orange);
+  background: linear-gradient(135deg, rgba(245,158,11,0.08), transparent);
+  animation: dashPulse 2.4s ease-in-out infinite;
+}
+.dash-card.is-pending .dash-card-status { color: var(--dash-orange); }
+.dash-card.is-done    .dash-card-status { color: var(--dash-green);  }
+
+@keyframes dashPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.0); }
+  50%      { box-shadow: 0 0 0 6px rgba(245,158,11,0.15); }
 }
 
-.home-card.accent-admin { border-color: rgba(138,42,43,0.3); }
-.home-card.accent-admin:hover {
-  border-color: var(--tm-red-2);
-  box-shadow: 0 0 0 3px rgba(138,42,43,0.12), var(--glow-red);
+/* ── Doc card (horizontal) ──────────────────────────────────────────────── */
+.dash-card-doc {
+  flex-direction: row; align-items: center; gap: 14px; padding: 16px 18px;
 }
+.dash-card-doc .dash-card-icon { font-size: 22px; }
+.dash-card-doc > div           { flex: 1; }
+.dash-card-desc                { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.dash-card-arrow               { font-size: 22px; color: var(--text-muted); }
+
+/* ── Skeleton shimmer ───────────────────────────────────────────────────── */
+.dash-skel {
+  display:inline-block; width: 80px; height: 14px; border-radius: 4px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--border-strong) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: dashShimmer 1.4s linear infinite;
+}
+@keyframes dashShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* ── Document picker overlay ─────────────────────────────────────────────── */
 .doc-picker-overlay {
