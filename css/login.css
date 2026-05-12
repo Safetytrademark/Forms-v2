@@ -42,93 +42,51 @@ html, body {
   justify-content: flex-end;
   padding: 48px 44px;
   overflow: hidden;
-  background: #0d0d10;
+  background: #0d0d10 url('../assets/tm-hero.jpg') center center / cover no-repeat;
 }
 
-/* Diagonal accent stripe */
+/* Dark gradient overlay — lets the image breathe at top, readable text at bottom */
 .lp-hero::before {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    repeating-linear-gradient(
-      -55deg,
-      transparent,
-      transparent 18px,
-      rgba(192,39,45,0.06) 18px,
-      rgba(192,39,45,0.06) 20px
-    );
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.08) 0%,
+    rgba(0,0,0,0.45) 55%,
+    rgba(0,0,0,0.90) 100%
+  );
   pointer-events: none;
 }
 
-/* Bottom-left gradient bloom */
-.lp-hero::after {
-  content: '';
-  position: absolute;
-  bottom: -80px;
-  left: -80px;
-  width: 440px;
-  height: 440px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(138,42,43,0.28) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.lp-hero-logo {
-  width: 160px;
-  margin-bottom: auto;
-  position: relative;
-  z-index: 1;
-}
+/* Remove old bloom — image has its own dramatic lighting */
+.lp-hero::after { display: none; }
 
 .lp-hero-content {
   position: relative;
   z-index: 1;
 }
 
-.lp-hero-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 11px;
+/* Company tagline pulled from the brand image */
+.lp-hero-tagline {
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent);
-  background: rgba(192,39,45,0.12);
-  border: 1px solid rgba(192,39,45,0.35);
-  border-radius: 999px;
-  padding: 5px 12px;
-  margin-bottom: 20px;
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 22px;
+  position: relative;
+  padding-left: 16px;
 }
-
-.lp-hero-tag::before {
+.lp-hero-tagline::before {
   content: '';
-  width: 7px; height: 7px;
-  border-radius: 50%;
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 100%;
   background: var(--accent);
-  flex-shrink: 0;
-}
-
-.lp-hero-title {
-  font-size: clamp(28px, 3.5vw, 42px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  color: var(--text);
-  margin-bottom: 14px;
-}
-
-.lp-hero-title span {
-  color: var(--accent);
-}
-
-.lp-hero-sub {
-  font-size: 15px;
-  color: var(--text-muted);
-  line-height: 1.6;
-  max-width: 360px;
-  margin-bottom: 36px;
+  border-radius: 2px;
 }
 
 .lp-hero-pills {
@@ -320,15 +278,13 @@ html, body {
 
   .lp-hero {
     flex: none;
-    padding: 32px 24px 28px;
-    min-height: auto;
-    justify-content: flex-start;
+    min-height: 300px;
+    padding: 28px 24px 32px;
+    justify-content: flex-end;
+    background-position: center top;
   }
 
-  .lp-hero-logo { width: 130px; margin-bottom: 24px; }
-  .lp-hero-tag  { margin-bottom: 14px; }
-  .lp-hero-title { font-size: 26px; margin-bottom: 10px; }
-  .lp-hero-sub   { font-size: 14px; margin-bottom: 20px; }
+  .lp-hero-tagline { font-size: 12px; margin-bottom: 16px; }
   .lp-hero-pills { display: none; }
 
   .lp-auth {
