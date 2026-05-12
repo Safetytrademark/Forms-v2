@@ -2264,10 +2264,14 @@ body::after {
   object-fit: cover;
   display: block;
   margin-bottom: 4px;
+  background: #111117;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
 }
 .dash-card-img--sm {
   width: 48px; height: 48px;
   border-radius: 10px;
+  background: #111117;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
 }
 
 .dash-card-badge {
