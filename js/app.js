@@ -165,19 +165,15 @@ function renderDashStats(s) {
   if (!s) return;
 
   // Inspections
+  // Inspections count
   const im = document.getElementById('inspMetric');
   if (im) im.textContent = `${s.inspWeek} this week`;
-  const ob = document.getElementById('inspOverdueBadge');
-  if (ob) {
-    if (s.overdue > 0) { ob.textContent = `${s.overdue} overdue`; ob.hidden = false; }
-    else ob.hidden = true;
-  }
 
-  // Reports
+  // Reports count
   const rm = document.getElementById('reportsMetric');
   if (rm) rm.textContent = `${s.repWeek} this week`;
 
-  // Tailgate (urgency-driven)
+  // Tailgate card state
   const tg = document.getElementById('tailgateCard');
   const tgStatus = document.getElementById('tailgateStatus');
   if (tg && tgStatus) {
@@ -189,9 +185,13 @@ function renderDashStats(s) {
     } else {
       tg.classList.remove('is-done');
       tg.classList.add('is-pending');
-      tgStatus.innerHTML = '⚠️ <strong>Pending today</strong>';
+      tgStatus.textContent = 'Tap to complete';
     }
   }
+
+  // Tailgate heads-up banner — show only if not done today
+  const alert = document.getElementById('dashTailgateAlert');
+  if (alert) alert.hidden = !!s.tailgateDoneAt;
 
   // Timesheet
   const tsEl = document.getElementById('timesheetStatus');
@@ -208,26 +208,10 @@ function renderDashStats(s) {
       dStat.innerHTML = `📦 <strong>${s.deliveries.length} today</strong>${time}`;
     }
   }
-
-  // Operational summary line in header
-  const parts = [];
-  if (!s.tailgateDoneAt)    parts.push('🦺 Tailgate pending');
-  if (s.deliveries.length)  parts.push(`📦 ${s.deliveries.length} delivery today`);
-  if (s.overdue)            parts.push(`🔍 ${s.overdue} inspection${s.overdue > 1 ? 's' : ''} overdue`);
-  const sumEl = document.getElementById('dashSummary');
-  if (sumEl) sumEl.textContent = parts.length ? parts.join(' · ') : 'All clear — no pending items today';
-
-  // Notification badge
-  const badge = document.getElementById('dashNotifBadge');
-  if (badge) {
-    const pendCount = (s.tailgateDoneAt ? 0 : 1) + s.overdue;
-    if (pendCount > 0) { badge.textContent = pendCount; badge.hidden = false; }
-    else badge.hidden = true;
-  }
 }
 
 function setDashSkeletons() {
-  ['inspMetric','reportsMetric','tailgateStatus','timesheetStatus','deliveryStatus','dashSummary']
+  ['inspMetric','reportsMetric','tailgateStatus','timesheetStatus','deliveryStatus']
     .forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<span class="dash-skel"></span>'; });
 }
 

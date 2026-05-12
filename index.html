@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=3">
+  <link rel="stylesheet" href="css/styles.css?v=4">
   <!-- Supabase JS client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -69,23 +69,25 @@
     <header class="dash-header">
       <div class="dash-header-left">
         <div class="dash-greeting" id="dashGreeting">Good morning 👋</div>
-        <div class="dash-summary" id="dashSummary">Loading…</div>
         <div class="dash-weather" id="dashWeather" hidden></div>
       </div>
       <div class="dash-header-right">
-        <button class="dash-icon-btn" id="dashNotifBtn" title="Notifications">
-          🔔<span class="dash-notif-badge" id="dashNotifBadge" hidden></span>
-        </button>
-        <button class="dash-avatar" id="dashAvatarBtn" title="Profile" onclick="handleLogout()">R</button>
+        <button class="dash-avatar" id="dashAvatarBtn" title="Sign out" onclick="handleLogout()">R</button>
       </div>
     </header>
+
+    <!-- Tailgate heads-up banner -->
+    <div class="dash-alert" id="dashTailgateAlert" hidden>
+      <span class="dash-alert-icon">🦺</span>
+      <span class="dash-alert-text">Did you complete your daily tailgate today?</span>
+      <button class="dash-alert-btn" onclick="handleDashAction('tailgate')">Complete →</button>
+    </div>
 
     <!-- Primary actions -->
     <section class="dash-section dash-primary">
       <button class="dash-card dash-card-primary accent-blue" data-action="inspections">
         <div class="dash-card-head">
           <span class="dash-card-icon">🔍</span>
-          <span class="dash-card-badge" id="inspOverdueBadge" hidden>0 overdue</span>
         </div>
         <div class="dash-card-metric" id="inspMetric">—</div>
         <div class="dash-card-label">Equipment Inspections</div>
@@ -402,14 +404,14 @@
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
 <!-- App scripts (order matters) — bump ?v=N when editing to bust cache -->
-<script src="js/supabase-client.js?v=3"></script>
-<script src="js/auth.js?v=3"></script>
-<script src="js/delivery.js?v=3"></script>
-<script src="js/logo.js?v=3"></script>
-<script src="js/form-configs.js?v=3"></script>
-<script src="js/pdf-generator.js?v=3"></script>
-<script src="js/api.js?v=3"></script>
-<script src="js/app.js?v=3"></script>
+<script src="js/supabase-client.js?v=4"></script>
+<script src="js/auth.js?v=4"></script>
+<script src="js/delivery.js?v=4"></script>
+<script src="js/logo.js?v=4"></script>
+<script src="js/form-configs.js?v=4"></script>
+<script src="js/pdf-generator.js?v=4"></script>
+<script src="js/api.js?v=4"></script>
+<script src="js/app.js?v=4"></script>
 
 </body>
 </html>
