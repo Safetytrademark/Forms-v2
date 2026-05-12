@@ -369,8 +369,8 @@ async function loadDeliveries() {
     return;
   }
 
-  const pending = (reqs || []).filter(r => r.status === 'pending' || r.status === 'in_transit');
-  const history = (reqs || []).filter(r => r.status === 'delivered' || r.status === 'cancelled');
+  const pending = (reqs || []).filter(r => r.status === 'requested' || r.status === 'on_schedule');
+  const history = (reqs || []).filter(r => r.status === 'delivered');
 
   pendingWrap.innerHTML = pending.length
     ? pending.map(renderDeliveryCard).join('')
@@ -382,20 +382,30 @@ async function loadDeliveries() {
 }
 
 function renderDeliveryCard(req, compact = false) {
-  const statusColors = { pending: 'var(--warning)', in_transit: 'var(--info)', delivered: 'var(--success)', cancelled: 'var(--error)' };
-  const statusLabels = { pending: '⏳ Pending', in_transit: '🚛 In Transit', delivered: '✅ Delivered', cancelled: '❌ Cancelled' };
+  const statusColors = {
+    requested:   '#f59e0b',
+    on_schedule: '#3b82f6',
+    delivered:   '#22c55e'
+  };
+  const statusLabels = {
+    requested:   '📋 Requested',
+    on_schedule: '🚛 On Schedule',
+    delivered:   '✅ Delivered'
+  };
   const color = statusColors[req.status] || 'var(--text-muted)';
 
   const itemsList = formatDeliveryItems(req.items);
-  const neededBy  = req.needed_by ? `Needed by: <strong>${formatDate(req.needed_by)}</strong>` : '';
+  const timeStr   = req.needed_by_time ? ` at <strong>${esc(req.needed_by_time)}</strong>` : '';
+  const neededBy  = req.needed_by
+    ? `Needed by: <strong>${formatDate(req.needed_by)}</strong>${timeStr}`
+    : '';
 
   const actions = compact ? '' : `
     <div class="delivery-card-actions">
       <select class="delivery-status-select" onchange="updateDeliveryStatus('${req.id}', this.value)">
-        <option value="pending"    ${req.status==='pending'    ? 'selected':''}>⏳ Pending</option>
-        <option value="in_transit" ${req.status==='in_transit' ? 'selected':''}>🚛 In Transit</option>
-        <option value="delivered"  ${req.status==='delivered'  ? 'selected':''}>✅ Delivered</option>
-        <option value="cancelled"  ${req.status==='cancelled'  ? 'selected':''}>❌ Cancelled</option>
+        <option value="requested"   ${req.status==='requested'   ? 'selected':''}>📋 Requested</option>
+        <option value="on_schedule" ${req.status==='on_schedule' ? 'selected':''}>🚛 On Schedule</option>
+        <option value="delivered"   ${req.status==='delivered'   ? 'selected':''}>✅ Delivered</option>
       </select>
     </div>`;
 
@@ -404,7 +414,7 @@ function renderDeliveryCard(req, compact = false) {
       <div class="delivery-card-header">
         <div>
           <div class="admin-cell-name">${esc(req.projects?.name || 'Unknown project')}</div>
-          <div class="admin-cell-meta">${esc(req.profiles?.full_name || 'Unknown foreman')} · ${formatDate(req.requested_at)} ${neededBy ? '· '+neededBy : ''}</div>
+          <div class="admin-cell-meta">${esc(req.profiles?.full_name || 'Unknown foreman')} · ${formatDate(req.requested_at)}${neededBy ? ' · ' + neededBy : ''}</div>
         </div>
         <span class="delivery-status-pill" style="background:${color}20;color:${color}">${statusLabels[req.status] || req.status}</span>
       </div>

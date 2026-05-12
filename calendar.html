@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Delivery Calendar — Trademark Safety</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/calendar.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ── Header ───────────────────────────────────────────────────────────────── -->
+<header class="cal-header">
+  <div class="cal-header-left">
+    <img class="cal-logo" src="assets/TradeMarkMas-Colour-RGB-Lrg.png" alt="Trademark Masonry"
+      onerror="this.style.display='none'">
+    <span class="cal-title">Delivery Calendar</span>
+  </div>
+  <div class="cal-header-right">
+    <span class="admin-user" id="calUserLabel"></span>
+    <button class="cal-nav-btn" onclick="goToday()">Today</button>
+    <button class="cal-back-btn" onclick="window.location.href='admin.html'">⚙️ Admin</button>
+    <button class="cal-back-btn" onclick="window.location.href='index.html'">← App</button>
+  </div>
+</header>
+
+<!-- ── Month navigation ──────────────────────────────────────────────────────── -->
+<div class="cal-month-nav">
+  <button class="cal-arrow" onclick="prevMonth()">&#8249;</button>
+  <div class="cal-month-label" id="calMonthLabel">Loading…</div>
+  <button class="cal-arrow" onclick="nextMonth()">&#8250;</button>
+</div>
+
+<!-- ── Legend ───────────────────────────────────────────────────────────────── -->
+<div class="cal-legend">
+  <div class="cal-legend-item">
+    <div class="cal-legend-dot" style="background:#f59e0b"></div>
+    <span>Requested</span>
+  </div>
+  <div class="cal-legend-item">
+    <div class="cal-legend-dot" style="background:#3b82f6"></div>
+    <span>On Schedule</span>
+  </div>
+  <div class="cal-legend-item">
+    <div class="cal-legend-dot" style="background:#22c55e"></div>
+    <span>Delivered</span>
+  </div>
+</div>
+
+<!-- ── Calendar grid ─────────────────────────────────────────────────────────── -->
+<div class="cal-wrap">
+  <div class="cal-grid" id="calGrid">
+    <div class="cal-loading" style="grid-column:1/-1">Loading…</div>
+  </div>
+</div>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/calendar.js"></script>
+
+</body>
+</html>

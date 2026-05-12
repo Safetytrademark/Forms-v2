@@ -20,8 +20,10 @@ function openDeliveryModal() {
     neededByEl.value = tomorrow.toISOString().split('T')[0];
   }
 
-  // Reset quantities and error
+  // Reset quantities, time and error
   document.querySelectorAll('.delivery-qty').forEach(el => { el.value = ''; });
+  const timeEl = document.getElementById('delivNeededByTime');
+  if (timeEl) timeEl.value = '';
   const errEl = document.getElementById('deliveryError');
   if (errEl) errEl.textContent = '';
 
@@ -74,8 +76,9 @@ async function submitDeliveryRequest() {
   const errEl    = document.getElementById('deliveryError');
   const projSel  = document.getElementById('delivProjectSelect');
   const projName = projSel?.value || '';
-  const neededBy = document.getElementById('delivNeededBy')?.value || null;
-  const notes    = (document.getElementById('delivNotes')?.value || '').trim();
+  const neededBy     = document.getElementById('delivNeededBy')?.value || null;
+  const neededByTime = (document.getElementById('delivNeededByTime')?.value || '').trim() || null;
+  const notes        = (document.getElementById('delivNotes')?.value || '').trim();
 
   if (errEl) errEl.textContent = '';
 
@@ -100,11 +103,12 @@ async function submitDeliveryRequest() {
     if (!project) throw new Error('Project not found.');
 
     const { error } = await sbClient.from('delivery_requests').insert({
-      project_id: project.id,
-      foreman_id: window.currentUser.id,
+      project_id:     project.id,
+      foreman_id:     window.currentUser.id,
       items,
-      notes:      notes || null,
-      needed_by:  neededBy || null
+      notes:          notes || null,
+      needed_by:      neededBy || null,
+      needed_by_time: neededByTime || null
     });
 
     if (error) throw error;
@@ -115,6 +119,22 @@ async function submitDeliveryRequest() {
     if (typeof showToast === 'function') {
       showToast('📦 Delivery request sent!', 'success');
     }
+
+    // ── Push notification to admin phone via ntfy.sh ──────────────────────────
+    try {
+      const foremanName = window.currentProfile?.full_name || 'Foreman';
+      const timeStr     = neededByTime ? ` at ${neededByTime}` : '';
+      const dateStr     = neededBy     ? ` — needed by ${neededBy}${timeStr}` : '';
+      await fetch('https://ntfy.sh/tm-delivery-zrrqug', {
+        method: 'POST',
+        headers: {
+          'Title':    '📦 New Delivery Request',
+          'Priority': 'high',
+          'Tags':     'package,construction'
+        },
+        body: `${projName}${dateStr}\nRequested by ${foremanName}`
+      });
+    } catch (_) { /* silent — notification is best-effort */ }
 
   } catch (err) {
     console.error('Delivery request failed:', err);
