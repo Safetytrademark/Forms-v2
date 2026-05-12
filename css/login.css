@@ -45,16 +45,16 @@ html, body {
   background: #0d0d10 url('../assets/tm-hero.jpg') center center / cover no-repeat;
 }
 
-/* Dark gradient overlay — lets the image breathe at top, readable text at bottom */
+/* Dark gradient overlay — image visible at top, solid enough for text at bottom */
 .lp-hero::before {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(0,0,0,0.08) 0%,
-    rgba(0,0,0,0.45) 55%,
-    rgba(0,0,0,0.90) 100%
+    rgba(0,0,0,0.15) 0%,
+    rgba(0,0,0,0.55) 50%,
+    rgba(0,0,0,0.93) 100%
   );
   pointer-events: none;
 }
@@ -67,26 +67,48 @@ html, body {
   z-index: 1;
 }
 
-/* Company tagline pulled from the brand image */
-.lp-hero-tagline {
-  font-size: 13px;
+.lp-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.75);
-  margin-bottom: 22px;
-  position: relative;
-  padding-left: 16px;
+  color: var(--accent);
+  background: rgba(192,39,45,0.18);
+  border: 1px solid rgba(192,39,45,0.45);
+  border-radius: 999px;
+  padding: 5px 12px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(4px);
 }
-.lp-hero-tagline::before {
+.lp-hero-tag::before {
   content: '';
-  position: absolute;
-  left: 0; top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 100%;
+  width: 7px; height: 7px;
+  border-radius: 50%;
   background: var(--accent);
-  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.lp-hero-title {
+  font-size: clamp(28px, 3.2vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: #ffffff;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.6);
+  margin-bottom: 16px;
+}
+.lp-hero-title span { color: var(--accent); }
+
+.lp-hero-sub {
+  font-size: 15px;
+  color: rgba(255,255,255,0.72);
+  line-height: 1.65;
+  max-width: 380px;
+  margin-bottom: 32px;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
 }
 
 .lp-hero-pills {
