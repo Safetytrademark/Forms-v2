@@ -313,14 +313,13 @@ async function uploadDocument() {
       .from('project-documents')
       .getPublicUrl(path);
 
-    // 3. Insert row into documents table
-    const { error: dbErr } = await sbClient.from('documents').insert({
-      project_id:  projectId,
-      title,
-      type,
-      file_name:   path,
-      file_url:    publicUrl,
-      uploaded_by: adminCurrentUser.id
+    // 3. Insert row via RPC (bypasses RLS — security enforced inside the function)
+    const { error: dbErr } = await sbClient.rpc('insert_document', {
+      p_project_id: projectId,
+      p_title:      title,
+      p_type:       type,
+      p_file_name:  path,
+      p_file_url:   publicUrl
     });
 
     if (dbErr) throw dbErr;
