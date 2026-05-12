@@ -91,16 +91,19 @@ async function showHomeDashboard() {
     el.onclick = () => handleDashAction(el.dataset.action);
   });
 
-  // Skeletons in place of metrics, then load
+  // Skeletons in place of metrics, then load stats + weather in parallel
   setDashSkeletons();
-  try {
-    const stats = await loadDashboardStats();
-    renderDashStats(stats);
-  } catch (err) {
+  const [stats, weather] = await Promise.allSettled([
+    loadDashboardStats(),
+    loadWeather()
+  ]);
+  try { renderDashStats(stats.value ?? null); }
+  catch (err) {
     console.error('Dashboard stats failed:', err);
     const sumEl = document.getElementById('dashSummary');
     if (sumEl) sumEl.textContent = 'Could not load operational status';
   }
+  renderWeather(weather.value ?? null);
 }
 
 async function loadDashboardStats() {
@@ -238,6 +241,80 @@ function handleDashAction(action) {
     case 'documents':   return openDocumentPicker();
     case 'admin':       return openAdminPanel();
   }
+}
+
+// ── Weather (Open-Meteo — free, no API key) ──────────────────────────────────
+async function loadWeather() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) { resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await fetch(
+            `https://api.open-meteo.com/v1/forecast` +
+            `?latitude=${coords.latitude}&longitude=${coords.longitude}` +
+            `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m` +
+            `&temperature_unit=celsius&wind_speed_unit=kmh&timezone=auto`
+          );
+          const json = await res.json();
+          const c = json.current;
+          resolve({
+            temp:       Math.round(c.temperature_2m),
+            feelsLike:  Math.round(c.apparent_temperature),
+            wind:       Math.round(c.wind_speed_10m),
+            icon:       weatherIcon(c.weather_code),
+            condition:  weatherLabel(c.weather_code),
+            code:       c.weather_code
+          });
+        } catch { resolve(null); }
+      },
+      () => resolve(null),
+      { timeout: 6000, maximumAge: 5 * 60 * 1000 }
+    );
+  });
+}
+
+function weatherIcon(code) {
+  if (code === 0)           return '☀️';
+  if (code === 1)           return '🌤️';
+  if (code === 2)           return '⛅';
+  if (code === 3)           return '☁️';
+  if (code <= 48)           return '🌫️';
+  if (code <= 55)           return '🌦️';
+  if (code <= 67)           return '🌧️';
+  if (code <= 77)           return '🌨️';
+  if (code <= 82)           return '🌦️';
+  if (code <= 99)           return '⛈️';
+  return '🌡️';
+}
+
+function weatherLabel(code) {
+  if (code === 0)  return 'Clear sky';
+  if (code === 1)  return 'Mainly clear';
+  if (code === 2)  return 'Partly cloudy';
+  if (code === 3)  return 'Overcast';
+  if (code <= 48)  return 'Foggy';
+  if (code <= 55)  return 'Drizzle';
+  if (code <= 67)  return 'Rain';
+  if (code <= 77)  return 'Snow';
+  if (code <= 82)  return 'Showers';
+  return 'Thunderstorm';
+}
+
+function renderWeather(w) {
+  const el = document.getElementById('dashWeather');
+  if (!el || !w) return;
+  el.hidden = false;
+  el.innerHTML =
+    `<span class="dash-weather-icon">${w.icon}</span>` +
+    `<span class="dash-weather-temp">${w.temp}°C</span>` +
+    `<span class="dash-weather-sep">·</span>` +
+    `<span class="dash-weather-label">${w.condition}</span>` +
+    `<span class="dash-weather-sep">·</span>` +
+    `<span class="dash-weather-wind">💨 ${w.wind} km/h</span>` +
+    (w.feelsLike !== w.temp
+      ? `<span class="dash-weather-sep">·</span><span class="dash-weather-feels">Feels ${w.feelsLike}°</span>`
+      : '');
 }
 
 function startFormFlow(allowedTypes) {

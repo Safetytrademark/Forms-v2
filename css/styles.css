@@ -2302,6 +2302,27 @@ body::after {
 }
 @keyframes dashShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
+/* ── Weather pill ───────────────────────────────────────────────────────────── */
+.dash-weather {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  padding: 5px 10px;
+  background: var(--surface-flat);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--text-muted);
+  width: fit-content;
+}
+.dash-weather-icon  { font-size: 14px; line-height: 1; }
+.dash-weather-temp  { font-weight: 700; color: var(--text); font-size: 13px; }
+.dash-weather-sep   { opacity: 0.35; }
+.dash-weather-label { color: var(--text-muted); }
+.dash-weather-wind  { color: var(--text-muted); }
+.dash-weather-feels { color: var(--text-muted); font-style: italic; }
+
 /* ── Document picker overlay ─────────────────────────────────────────────── */
 .doc-picker-overlay {
   position: fixed;
