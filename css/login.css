@@ -9,8 +9,8 @@
   --border-strong: rgba(255,255,255,0.13);
   --text:          #f0f0f0;
   --text-muted:    #8a8a9a;
-  --accent:        #FFC72C;
-  --accent-dark:   #D89A14;
+  --accent:        #C0272D;
+  --accent-dark:   #9a1e23;
   --tm-red:        #8a2a2b;
   --error:         #f87171;
   --success:       #4ade80;
@@ -55,8 +55,8 @@ html, body {
       -55deg,
       transparent,
       transparent 18px,
-      rgba(255,199,44,0.045) 18px,
-      rgba(255,199,44,0.045) 20px
+      rgba(192,39,45,0.06) 18px,
+      rgba(192,39,45,0.06) 20px
     );
   pointer-events: none;
 }
@@ -95,8 +95,8 @@ html, body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--accent);
-  background: rgba(255,199,44,0.1);
-  border: 1px solid rgba(255,199,44,0.25);
+  background: rgba(192,39,45,0.12);
+  border: 1px solid rgba(192,39,45,0.35);
   border-radius: 999px;
   padding: 5px 12px;
   margin-bottom: 20px;
@@ -256,12 +256,12 @@ html, body {
 .lp-input::placeholder { color: var(--text-muted); opacity: 0.6; }
 .lp-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(255,199,44,0.1);
+  box-shadow: 0 0 0 3px rgba(192,39,45,0.15);
 }
 
 /* Code field accent */
 .lp-input--code {
-  border-color: rgba(255,199,44,0.2);
+  border-color: rgba(192,39,45,0.3);
   letter-spacing: 0.06em;
   font-weight: 600;
 }
@@ -279,7 +279,7 @@ html, body {
   padding: 13px;
   margin-top: 4px;
   background: var(--accent);
-  color: #0a0a0a;
+  color: #ffffff;
   font-size: 14px;
   font-weight: 700;
   font-family: var(--font);
