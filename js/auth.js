@@ -25,6 +25,7 @@ async function initAuth() {
 // ── After successful login ────────────────────────────────────────────────────
 async function onAuthSuccess(user) {
   currentUser = user;
+  window.currentUser = user;
 
   // Load profile
   const { data: profile, error } = await sbClient
@@ -41,6 +42,7 @@ async function onAuthSuccess(user) {
   }
 
   currentProfile = profile;
+  window.currentProfile = profile;
 
   // First-time login: if name not set yet, ask for it before showing the app
   if (!profile.full_name || !profile.full_name.trim()) {
@@ -106,7 +108,9 @@ async function handleLogout() {
   await sbClient.auth.signOut();
   currentUser    = null;
   currentProfile = null;
-  window.userProjects = null;
+  window.currentUser    = null;
+  window.currentProfile = null;
+  window.userProjects   = null;
 }
 
 // ── Header updates ────────────────────────────────────────────────────────────
