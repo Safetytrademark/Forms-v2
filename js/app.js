@@ -52,11 +52,7 @@ function openAdminPanel() {
   window.location.href = 'admin.html';
 }
 
-// ── Home Dashboard 2.0 ─────────────────────────────────────────────────────────
-const DASH_INSPECTION_TYPES = ['Telehandler Inspection','Forklift Inspection','E-Pallet Jack Inspection','Scaffolding Inspection'];
-const DASH_REPORT_TYPES     = ['Incident Report','Hazard Observation','QAQC - Foreman','Site Photos Only'];
-const DASH_TAILGATE_TYPES   = ['Daily Tailgate','Weekly Toolbox Talk'];
-const DASH_TIME_TYPES       = ['Weekly Timesheet','Production Report'];
+// ── Home Dashboard ────────────────────────────────────────────────────────────
 
 async function showHomeDashboard() {
   const homeScreen   = document.getElementById('homeScreen');
@@ -86,144 +82,107 @@ async function showHomeDashboard() {
   const adminSection = document.getElementById('dashAdminSection');
   if (adminSection) adminSection.hidden = window.currentProfile?.role !== 'admin';
 
-  // Wire card clicks (re-bind every time — replaces previous handlers)
-  document.querySelectorAll('.dash-card[data-action]').forEach(el => {
+  // Populate project selector
+  const projSel = document.getElementById('dashProjectSelect');
+  if (projSel) {
+    const projects = window.userProjects || [];
+    const prev = projSel.value; // keep previous selection across returns
+    projSel.innerHTML = '<option value="">— Select a project to begin —</option>';
+    projects.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p; o.textContent = p;
+      projSel.appendChild(o);
+    });
+    // Restore previous selection or use state.project
+    const restore = prev || state.project || '';
+    if (restore && projects.includes(restore)) projSel.value = restore;
+    // Auto-select if only one project assigned
+    if (!projSel.value && projects.length === 1) projSel.value = projects[0];
+    projSel.onchange = () => { state.project = projSel.value; };
+    state.project = projSel.value;
+  }
+
+  // Wire data-type item cards
+  document.querySelectorAll('.dash-item[data-type]').forEach(el => {
+    el.onclick = () => startSpecificFormFlow(el.dataset.type);
+  });
+
+  // Wire data-action cards (delivery, documents, admin)
+  document.querySelectorAll('[data-action]').forEach(el => {
     el.onclick = () => handleDashAction(el.dataset.action);
   });
 
-  // Skeletons in place of metrics, then load stats + weather in parallel
-  setDashSkeletons();
-  const [stats, weather] = await Promise.allSettled([
-    loadDashboardStats(),
+  // Tailgate banner + weather in parallel (lightweight)
+  const [tailgate, weather] = await Promise.allSettled([
+    checkTailgateToday(),
     loadWeather()
   ]);
-  try { renderDashStats(stats.value ?? null); }
-  catch (err) {
-    console.error('Dashboard stats failed:', err);
-    const sumEl = document.getElementById('dashSummary');
-    if (sumEl) sumEl.textContent = 'Could not load operational status';
-  }
+  const alert = document.getElementById('dashTailgateAlert');
+  if (alert) alert.hidden = !!(tailgate.value);
   renderWeather(weather.value ?? null);
 }
 
-async function loadDashboardStats() {
+// Check if a Daily Tailgate was submitted today for this user
+async function checkTailgateToday() {
   const uid = window.currentUser?.id;
-  if (!uid) return null;
-
-  // Monday 00:00 of current week (ISO — Mon-Sun)
-  const now = new Date();
-  const day = now.getDay() || 7; // Sun=0 → 7
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - day + 1);
-  monday.setHours(0,0,0,0);
-
-  const todayStr = now.toISOString().slice(0,10);
-  const weekAgo  = new Date(now.getTime() - 7*24*3600*1000).toISOString();
-
-  const [tailgate, weekSubs, deliveries, weekInsp] = await Promise.all([
-    sbClient.from('submissions')
-      .select('created_at')
-      .eq('foreman_id', uid)
-      .eq('submission_type', 'Daily Tailgate')
-      .gte('created_at', todayStr + 'T00:00:00')
-      .lte('created_at', todayStr + 'T23:59:59')
-      .order('created_at', { ascending: false })
-      .limit(1),
-    sbClient.from('submissions')
-      .select('submission_type, created_at')
-      .eq('foreman_id', uid)
-      .gte('created_at', monday.toISOString()),
-    sbClient.from('delivery_requests')
-      .select('id, needed_by_time, status, project_id')
-      .eq('foreman_id', uid)
-      .eq('needed_by', todayStr)
-      .neq('status', 'delivered')
-      .order('needed_by_time', { ascending: true }),
-    sbClient.from('submissions')
-      .select('submission_type')
-      .eq('foreman_id', uid)
-      .in('submission_type', DASH_INSPECTION_TYPES)
-      .gte('created_at', weekAgo)
-  ]);
-
-  const weekRows  = weekSubs.data || [];
-  const inspWeek  = weekRows.filter(r => DASH_INSPECTION_TYPES.includes(r.submission_type)).length;
-  const repWeek   = weekRows.filter(r => DASH_REPORT_TYPES.includes(r.submission_type)).length;
-  const timesheet = weekRows.find(r => r.submission_type === 'Weekly Timesheet');
-  const inspectedTypes = new Set((weekInsp.data || []).map(r => r.submission_type));
-  const overdue   = Math.max(0, DASH_INSPECTION_TYPES.length - inspectedTypes.size);
-
-  return {
-    tailgateDoneAt: tailgate.data?.[0]?.created_at || null,
-    inspWeek, repWeek, overdue,
-    timesheet: timesheet ? 'Submitted' : 'Pending',
-    deliveries: deliveries.data || []
-  };
+  if (!uid) return false;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const { data } = await sbClient.from('submissions')
+    .select('id')
+    .eq('foreman_id', uid)
+    .eq('submission_type', 'Daily Tailgate')
+    .gte('created_at', todayStr + 'T00:00:00')
+    .lte('created_at', todayStr + 'T23:59:59')
+    .limit(1);
+  return (data && data.length > 0) ? data[0] : null;
 }
 
-function renderDashStats(s) {
-  if (!s) return;
+// ── Start form flow for a specific pre-selected type ──────────────────────────
+function startSpecificFormFlow(type) {
+  const projSel = document.getElementById('dashProjectSelect');
+  const project = projSel?.value || '';
 
-  // Inspections
-  // Inspections count
-  const im = document.getElementById('inspMetric');
-  if (im) im.textContent = `${s.inspWeek} this week`;
-
-  // Reports count
-  const rm = document.getElementById('reportsMetric');
-  if (rm) rm.textContent = `${s.repWeek} this week`;
-
-  // Tailgate card state
-  const tg = document.getElementById('tailgateCard');
-  const tgStatus = document.getElementById('tailgateStatus');
-  if (tg && tgStatus) {
-    if (s.tailgateDoneAt) {
-      tg.classList.remove('is-pending');
-      tg.classList.add('is-done');
-      const t = new Date(s.tailgateDoneAt);
-      tgStatus.textContent = `✅ Completed at ${t.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})}`;
-    } else {
-      tg.classList.remove('is-done');
-      tg.classList.add('is-pending');
-      tgStatus.textContent = 'Tap to complete';
+  if (!project) {
+    showToast('Please select a project first ↑', 'warning');
+    // Brief visual highlight on the selector
+    if (projSel) {
+      projSel.focus();
+      projSel.classList.add('dash-project-bar-select--pulse');
+      setTimeout(() => projSel.classList.remove('dash-project-bar-select--pulse'), 900);
     }
+    return;
   }
 
-  // Tailgate heads-up banner — show only if not done today
-  const alert = document.getElementById('dashTailgateAlert');
-  if (alert) alert.hidden = !!s.tailgateDoneAt;
+  state.project       = project;
+  state.submissionType = type;
+  state.allowedTypes  = [type];
 
-  // Timesheet
-  const tsEl = document.getElementById('timesheetStatus');
-  if (tsEl) tsEl.textContent = s.timesheet === 'Submitted' ? '✅ Submitted this week' : '○ Not submitted yet';
+  const typeGrid = document.getElementById('typeGrid');
+  if (typeGrid) typeGrid.innerHTML = ''; // force re-render on step 2
 
-  // Delivery
-  const dStat = document.getElementById('deliveryStatus');
-  if (dStat) {
-    if (s.deliveries.length === 0) {
-      dStat.textContent = '○ No deliveries today';
-    } else {
-      const next = s.deliveries[0];
-      const time = next.needed_by_time ? ` at ${next.needed_by_time}` : '';
-      dStat.innerHTML = `📦 <strong>${s.deliveries.length} today</strong>${time}`;
-    }
-  }
-}
+  const homeScreen   = document.getElementById('homeScreen');
+  const appDiv       = document.querySelector('#mainApp .app');
+  const progressWrap = document.querySelector('.progress-wrap');
+  const navBar       = document.querySelector('.nav-bar');
 
-function setDashSkeletons() {
-  ['inspMetric','reportsMetric','tailgateStatus','timesheetStatus','deliveryStatus']
-    .forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<span class="dash-skel"></span>'; });
+  if (homeScreen)   homeScreen.style.display  = 'none';
+  if (appDiv)       appDiv.style.display      = '';
+  if (progressWrap) progressWrap.style.display = '';
+  if (navBar)       navBar.style.display      = '';
+
+  // Start at step 1 (foreman info — always a quick confirm since it's pre-filled)
+  state.currentStep = 1;
+  renderStep(1);
+  updateProgressBar(1);
+  updateNavButtons(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function handleDashAction(action) {
   switch (action) {
-    case 'inspections': return startFormFlow(DASH_INSPECTION_TYPES);
-    case 'reports':     return startFormFlow(DASH_REPORT_TYPES);
-    case 'tailgate':    return startFormFlow(DASH_TAILGATE_TYPES);
-    case 'timesheet':   return startFormFlow(DASH_TIME_TYPES);
-    case 'delivery':    return openDeliveryModal();
-    case 'documents':   return openDocumentPicker();
-    case 'admin':       return openAdminPanel();
+    case 'delivery':   return openDeliveryModal();
+    case 'documents':  return openDocumentPicker();
+    case 'admin':      return openAdminPanel();
   }
 }
 

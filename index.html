@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=7">
+  <link rel="stylesheet" href="css/styles.css?v=8">
   <!-- Supabase JS client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -37,9 +37,10 @@
 <!-- ── Main App (shown after login) ─────────────────────────────────────────── -->
 <div id="mainApp" style="display:none">
 
-<!-- ── Home Dashboard 2.0 ───────────────────────────────────────────────────── -->
+<!-- ── Home Dashboard ─────────────────────────────────────────────────────────── -->
 <div id="homeScreen" style="display:none">
   <div class="dash-wrap">
+
     <!-- Header -->
     <header class="dash-header">
       <div class="dash-header-left">
@@ -55,49 +56,94 @@
     <div class="dash-alert" id="dashTailgateAlert" hidden>
       <span class="dash-alert-icon">🦺</span>
       <span class="dash-alert-text">Did you complete your daily tailgate today?</span>
-      <button class="dash-alert-btn" onclick="handleDashAction('tailgate')">Complete →</button>
+      <button class="dash-alert-btn" onclick="startSpecificFormFlow('Daily Tailgate')">Complete →</button>
     </div>
 
-    <!-- Primary actions -->
-    <section class="dash-section dash-primary">
-      <button class="dash-card dash-card-primary accent-blue" data-action="inspections">
-        <img class="dash-card-img" src="assets/icons/inspections.svg" alt="Inspections">
-        <div class="dash-card-metric" id="inspMetric">—</div>
-        <div class="dash-card-label">Equipment Inspections</div>
-        <div class="dash-card-cta">▶ Start Inspection</div>
+    <!-- ── Active Project selector ──────────────────────────────────────────── -->
+    <div class="dash-project-bar">
+      <label class="dash-project-bar-label" for="dashProjectSelect">📍 Active Project</label>
+      <select class="dash-project-bar-select" id="dashProjectSelect">
+        <option value="">— Select a project to begin —</option>
+      </select>
+    </div>
+
+    <!-- ── Safety ───────────────────────────────────────────────────────────── -->
+    <div class="dash-section-label">Safety</div>
+    <section class="dash-section dash-grid">
+      <button class="dash-item" data-type="Daily Tailgate">
+        <img class="dash-item-img" src="assets/icons/tailgate.svg" alt="">
+        <span class="dash-item-label">Daily Tailgate</span>
       </button>
-      <button class="dash-card dash-card-primary accent-purple" data-action="reports">
-        <img class="dash-card-img" src="assets/icons/reports.svg" alt="Reports">
-        <div class="dash-card-metric" id="reportsMetric">—</div>
-        <div class="dash-card-label">Reports & Observations</div>
-        <div class="dash-card-cta">+ New Observation</div>
+      <button class="dash-item" data-type="Weekly Toolbox Talk">
+        <img class="dash-item-img" src="assets/icons/tailgate.svg" alt="">
+        <span class="dash-item-label">Weekly Toolbox Talk</span>
       </button>
     </section>
 
-    <!-- Today's Operations -->
-    <div class="dash-section-label">Today's Operations</div>
-    <section class="dash-section dash-ops">
-      <button class="dash-card dash-card-ops accent-orange" id="tailgateCard" data-action="tailgate">
-        <img class="dash-card-img dash-card-img--sm" src="assets/icons/tailgate.svg" alt="Tailgate">
-        <div class="dash-card-status" id="tailgateStatus">Loading…</div>
-        <div class="dash-card-label">Daily Tailgate</div>
+    <!-- ── Inspections ──────────────────────────────────────────────────────── -->
+    <div class="dash-section-label">Inspections</div>
+    <section class="dash-section dash-grid">
+      <button class="dash-item" data-type="Telehandler Inspection">
+        <img class="dash-item-img" src="assets/icons/inspections.svg" alt="">
+        <span class="dash-item-label">Telehandler</span>
       </button>
-      <button class="dash-card dash-card-ops accent-green" data-action="timesheet">
-        <img class="dash-card-img dash-card-img--sm" src="assets/icons/time-production.svg" alt="Timesheet">
-        <div class="dash-card-status" id="timesheetStatus">—</div>
-        <div class="dash-card-label">Time & Production</div>
+      <button class="dash-item" data-type="Forklift Inspection">
+        <img class="dash-item-img" src="assets/icons/inspections.svg" alt="">
+        <span class="dash-item-label">Forklift</span>
       </button>
-      <button class="dash-card dash-card-ops accent-amber" data-action="delivery">
-        <img class="dash-card-img dash-card-img--sm" src="assets/icons/delivery.svg" alt="Delivery">
-        <div class="dash-card-status" id="deliveryStatus">—</div>
-        <div class="dash-card-label">Request Delivery</div>
+      <button class="dash-item" data-type="E-Pallet Jack Inspection">
+        <img class="dash-item-img" src="assets/icons/inspections.svg" alt="">
+        <span class="dash-item-label">E-Pallet Jack</span>
+      </button>
+      <button class="dash-item" data-type="Scaffolding Inspection">
+        <img class="dash-item-img" src="assets/icons/inspections.svg" alt="">
+        <span class="dash-item-label">Scaffolding</span>
       </button>
     </section>
 
-    <!-- Documents (secondary) -->
+    <!-- ── Work Force ───────────────────────────────────────────────────────── -->
+    <div class="dash-section-label">Work Force</div>
+    <section class="dash-section dash-grid">
+      <button class="dash-item" data-type="Incident Report">
+        <img class="dash-item-img" src="assets/icons/reports.svg" alt="">
+        <span class="dash-item-label">Incident Report</span>
+      </button>
+      <button class="dash-item" data-type="Hazard Observation">
+        <img class="dash-item-img" src="assets/icons/reports.svg" alt="">
+        <span class="dash-item-label">Hazard Observation</span>
+      </button>
+      <button class="dash-item" data-type="QAQC - Foreman">
+        <img class="dash-item-img" src="assets/icons/reports.svg" alt="">
+        <span class="dash-item-label">QAQC - Foreman</span>
+      </button>
+      <button class="dash-item" data-type="Site Photos Only">
+        <img class="dash-item-img" src="assets/icons/reports.svg" alt="">
+        <span class="dash-item-label">Site Photos</span>
+      </button>
+      <button class="dash-item" data-type="Weekly Timesheet">
+        <img class="dash-item-img" src="assets/icons/time-production.svg" alt="">
+        <span class="dash-item-label">Weekly Timesheet</span>
+      </button>
+      <button class="dash-item" data-type="Production Report">
+        <img class="dash-item-img" src="assets/icons/time-production.svg" alt="">
+        <span class="dash-item-label">Production Report</span>
+      </button>
+    </section>
+
+    <!-- ── Deliveries ───────────────────────────────────────────────────────── -->
+    <div class="dash-section-label">Deliveries</div>
+    <section class="dash-section dash-grid">
+      <button class="dash-item" data-action="delivery">
+        <img class="dash-item-img" src="assets/icons/delivery.svg" alt="">
+        <span class="dash-item-label">Request Delivery</span>
+      </button>
+    </section>
+
+    <!-- ── Project Documentation ────────────────────────────────────────────── -->
+    <div class="dash-section-label">Project Documentation</div>
     <section class="dash-section dash-docs">
       <button class="dash-card dash-card-doc accent-gray" data-action="documents">
-        <img class="dash-card-img dash-card-img--sm" src="assets/icons/documents.svg" alt="Documents">
+        <img class="dash-card-img dash-card-img--sm" src="assets/icons/documents.svg" alt="">
         <div>
           <div class="dash-card-label">Project Documents</div>
           <div class="dash-card-desc">Drawings, RFIs, change orders</div>
@@ -106,10 +152,10 @@
       </button>
     </section>
 
-    <!-- Admin entry (only renders if role=admin) -->
+    <!-- Admin (only shown when role = admin) -->
     <section class="dash-section dash-docs" id="dashAdminSection" hidden>
       <button class="dash-card dash-card-doc accent-red" data-action="admin">
-        <span class="dash-card-icon">⚙️</span>
+        <span style="font-size:22px">⚙️</span>
         <div>
           <div class="dash-card-label">Admin Panel</div>
           <div class="dash-card-desc">Foremans, projects, deliveries</div>
@@ -117,6 +163,7 @@
         <span class="dash-card-arrow">›</span>
       </button>
     </section>
+
   </div>
 </div>
 
@@ -375,14 +422,14 @@
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
 <!-- App scripts (order matters) — bump ?v=N when editing to bust cache -->
-<script src="js/supabase-client.js?v=7"></script>
-<script src="js/auth.js?v=7"></script>
-<script src="js/delivery.js?v=7"></script>
-<script src="js/logo.js?v=7"></script>
-<script src="js/form-configs.js?v=7"></script>
-<script src="js/pdf-generator.js?v=7"></script>
-<script src="js/api.js?v=7"></script>
-<script src="js/app.js?v=7"></script>
+<script src="js/supabase-client.js?v=8"></script>
+<script src="js/auth.js?v=8"></script>
+<script src="js/delivery.js?v=8"></script>
+<script src="js/logo.js?v=8"></script>
+<script src="js/form-configs.js?v=8"></script>
+<script src="js/pdf-generator.js?v=8"></script>
+<script src="js/api.js?v=8"></script>
+<script src="js/app.js?v=8"></script>
 
 </body>
 </html>
