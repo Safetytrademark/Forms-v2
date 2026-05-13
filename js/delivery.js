@@ -158,7 +158,26 @@ async function submitDeliveryRequest() {
       showToast('📦 Delivery request sent!', 'success');
     }
 
-    // ── Notifications handled server-side via Supabase ───────────────────────
+    // ── Email via Supabase Edge Function (server-side, no keys exposed) ───────
+    try {
+      const foremanName = window.currentProfile?.full_name || 'Foreman';
+      fetch('https://aacrsnljubmmqqxfknzp.supabase.co/functions/v1/notify-delivery', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          record: {
+            project_id:     project.id,
+            foreman_id:     window.currentUser.id,
+            foreman_name:   foremanName,
+            project_name:   projName,
+            items,
+            notes:          notes || null,
+            needed_by:      neededBy || null,
+            needed_by_time: neededByTime || null
+          }
+        })
+      });
+    } catch (_) { /* best-effort */ }
 
   } catch (err) {
     console.error('Delivery request failed:', err);
