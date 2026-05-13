@@ -6,7 +6,7 @@ const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── Company invite code (used on login.html for self-registration) ─────────────
 // Change this value to rotate the invite code. Anyone with this code can register.
-const INVITE_CODE = 'TM-FIELD-2025';
+const INVITE_CODE = 'TM-CREW-9X4W';
 
 // ── EmailJS — delivery request email notifications ────────────────────────────
 // 1. Create a free account at https://emailjs.com
