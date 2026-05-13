@@ -14,6 +14,6 @@ const INVITE_CODE = 'TM-FIELD-2025';
 // 3. Create a template with variables: {{project}} {{foreman}} {{type}} {{needed_by}} {{items}} {{notes}}
 // 4. Copy your Public Key from Account > API Keys
 // Then fill in the three values below:
-window.EMAILJS_PUBLIC_KEY  = '';   // e.g. 'user_xxxxxxxxxxxxxxxxxxx'
-window.EMAILJS_SERVICE_ID  = '';   // e.g. 'service_xxxxxxx'
-window.EMAILJS_TEMPLATE_ID = '';   // e.g. 'template_xxxxxxx'
+window.EMAILJS_PUBLIC_KEY  = '';   // e.g. 'd2h5KAQWKq-NCZHC4'
+window.EMAILJS_SERVICE_ID  = '';   // e.g. 'service_nfue75r'
+window.EMAILJS_TEMPLATE_ID = '';   // e.g. 'template_aarp977'
