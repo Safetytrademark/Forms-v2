@@ -158,71 +158,7 @@ async function submitDeliveryRequest() {
       showToast('📦 Delivery request sent!', 'success');
     }
 
-    // ── Push notification to admin phone via ntfy.sh ──────────────────────────
-    // Uses JSON API to avoid CORS preflight issues from the browser
-    try {
-      const foremanName = window.currentProfile?.full_name || 'Foreman';
-      const timeStr     = neededByTime ? ` at ${neededByTime}` : '';
-      const dateStr     = neededBy     ? ` — needed by ${neededBy}${timeStr}` : '';
-      const typeLabel   = activeTab === 'other' ? ' [Other Materials]' : ' [Block Delivery]';
-      await fetch('https://ntfy.sh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic:    'tm-delivery-zrrqug',
-          title:    `📦 New Delivery — ${projName}`,
-          message:  `${typeLabel}${dateStr}\nRequested by ${foremanName}`,
-          priority: 5,
-          tags:     ['package', 'construction']
-        })
-      });
-    } catch (err) { console.warn('ntfy notification failed:', err); }
-
-    // ── Email notification via EmailJS ────────────────────────────────────────
-    try {
-      if (window.EMAILJS_PUBLIC_KEY && window.EMAILJS_SERVICE_ID && window.EMAILJS_TEMPLATE_ID) {
-        const foremanName  = window.currentProfile?.full_name || 'Foreman';
-        const timeStr      = neededByTime ? ` at ${neededByTime}` : '';
-        const neededByStr  = neededBy ? `${neededBy}${timeStr}` : 'Not specified';
-        const typeLabel    = activeTab === 'other' ? 'Other Materials' : 'Block Delivery';
-
-        // Build items summary for email body
-        let itemsSummary = '';
-        if (activeTab === 'other') {
-          const desc = (document.getElementById('delivOtherDesc')?.value || '').trim();
-          itemsSummary = desc;
-        } else {
-          const its = buildDeliveryItems();
-          const blockTypes = {
-            standards_2h: 'Standards 2H', bondbeams: 'Bondbeams', halves: 'Halves',
-            multiblock: 'Multiblock', squints: 'Squints',
-            block_lock: 'Block Lock Bundle', wall_mesh: 'Wall Mesh'
-          };
-          ['20cm','25cm','30cm'].forEach(size => {
-            if (!its[size]) return;
-            Object.entries(its[size]).forEach(([type, qty]) => {
-              if (qty > 0) itemsSummary += `${size} ${blockTypes[type] || type}: ${qty} pallets\n`;
-            });
-          });
-          if (its.mortar_tek > 0) itemsSummary += `Mortar Tek: ${its.mortar_tek} pallets\n`;
-          if (its.blockfill  > 0) itemsSummary += `Blockfill: ${its.blockfill} pallets\n`;
-        }
-
-        await emailjs.send(
-          window.EMAILJS_SERVICE_ID,
-          window.EMAILJS_TEMPLATE_ID,
-          {
-            project:   projName,
-            foreman:   foremanName,
-            type:      typeLabel,
-            needed_by: neededByStr,
-            items:     itemsSummary.trim() || 'No items specified',
-            notes:     notes || '—'
-          },
-          { publicKey: window.EMAILJS_PUBLIC_KEY }
-        );
-      }
-    } catch (err) { console.warn('EmailJS notification failed:', err); }
+    // ── Notifications handled server-side via Supabase ───────────────────────
 
   } catch (err) {
     console.error('Delivery request failed:', err);

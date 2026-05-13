@@ -8,12 +8,3 @@ const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Change this value to rotate the invite code. Anyone with this code can register.
 const INVITE_CODE = 'TM-CREW-9X4W';
 
-// ── EmailJS — delivery request email notifications ────────────────────────────
-// 1. Create a free account at https://emailjs.com
-// 2. Add your Gmail (or other) as a Service → copy the Service ID
-// 3. Create a template with variables: {{project}} {{foreman}} {{type}} {{needed_by}} {{items}} {{notes}}
-// 4. Copy your Public Key from Account > API Keys
-// Then fill in the three values below:
-window.EMAILJS_PUBLIC_KEY  = 'd2h5KAQWKq-NCZHC4';
-window.EMAILJS_SERVICE_ID  = 'service_z19qi6i';
-window.EMAILJS_TEMPLATE_ID = 'template_aarp977';
