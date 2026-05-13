@@ -1902,10 +1902,7 @@ async function handleSubmit() {
           console.error('Storage upload error:', upErr);
           showToast(`Storage error: ${upErr.message}`, 'warning');
         } else {
-          const { data: urlData } = sbClient.storage
-            .from('form-submissions')
-            .getPublicUrl(storageKey);
-          pdfStorageUrl = urlData?.publicUrl || null;
+          pdfStorageUrl = `${SUPABASE_URL}/storage/v1/object/public/form-submissions/${storageKey}`;
         }
       }
     } catch (upErr) {
