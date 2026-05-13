@@ -9,29 +9,31 @@ body { min-height: 100dvh; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px 20px;
-  background: var(--surface-flat);
-  border-bottom: 1px solid var(--border-strong);
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-0);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 100;
+  min-height: 56px;
 }
 
 .admin-header-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-3);
 }
 
 .admin-logo {
-  height: 36px;
+  height: 28px;
   width: auto;
+  opacity: 0.92;
 }
 
 .admin-title {
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text);
 }
@@ -39,47 +41,46 @@ body { min-height: 100dvh; }
 .admin-header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
 }
 
 .admin-user {
   font-size: 13px;
   color: var(--text-muted);
   display: none;
+  margin-right: var(--space-1);
 }
 @media (min-width: 480px) { .admin-user { display: block; } }
 
 .admin-back-btn,
 .admin-logout-btn {
-  background: none;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-sm);
+  background: var(--surface-flat);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   color: var(--text-muted);
   font-family: var(--font);
   font-size: 13px;
   font-weight: 500;
-  padding: 6px 14px;
+  padding: 6px 12px;
   cursor: pointer;
-  transition: background var(--t-fast), color var(--t-fast);
+  transition: background var(--t-fast) var(--ease-out),
+              border-color var(--t-fast) var(--ease-out),
+              color var(--t-fast) var(--ease-out);
   white-space: nowrap;
 }
 .admin-back-btn:hover,
 .admin-logout-btn:hover {
-  background: var(--border);
+  background: var(--surface-flat-2);
+  border-color: var(--border-strong);
   color: var(--text);
 }
-.admin-logout-btn {
-  border-color: rgba(138,42,43,0.4);
-  color: var(--tm-red-2);
-}
-.admin-logout-btn:hover { background: rgba(138,42,43,0.1); color: var(--tm-red-2); }
 
-/* ── Tabs ─────────────────────────────────────────────────────────────────── */
+/* ── Tabs (underline pattern — Linear/Stripe style) ──────────────────────── */
 .admin-tabs {
   display: flex;
-  gap: 2px;
-  padding: 10px 16px;
-  background: var(--bg-1);
+  gap: var(--space-1);
+  padding: 0 var(--space-5);
+  background: var(--bg-0);
   border-bottom: 1px solid var(--border);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -88,29 +89,39 @@ body { min-height: 100dvh; }
 .admin-tab {
   background: none;
   border: none;
-  border-radius: var(--r-md);
+  border-radius: 0;
   color: var(--text-muted);
   font-family: var(--font);
   font-size: 14px;
   font-weight: 500;
-  padding: 8px 18px;
+  padding: 12px var(--space-3) 11px;
   cursor: pointer;
-  transition: background var(--t-fast), color var(--t-fast);
+  transition: color var(--t-fast) var(--ease-out);
   white-space: nowrap;
   flex-shrink: 0;
+  position: relative;
 }
-.admin-tab:hover { background: var(--border); color: var(--text); }
+.admin-tab::after {
+  content: "";
+  position: absolute;
+  left: var(--space-3); right: var(--space-3); bottom: -1px;
+  height: 2px;
+  background: transparent;
+  border-radius: 1px;
+  transition: background var(--t-fast) var(--ease-out);
+}
+.admin-tab:hover { color: var(--text); }
 .admin-tab.active {
-  background: var(--surface-flat-2);
   color: var(--text);
   font-weight: 600;
 }
+.admin-tab.active::after { background: var(--accent); }
 
 /* ── Main ─────────────────────────────────────────────────────────────────── */
 .admin-main {
-  max-width: 760px;
+  max-width: 880px;
   margin: 0 auto;
-  padding: 24px 16px 60px;
+  padding: var(--space-7) var(--space-5) var(--space-9);
 }
 
 .admin-panel { display: none; }
@@ -118,12 +129,12 @@ body { min-height: 100dvh; }
 
 /* ── Section headers ──────────────────────────────────────────────────────── */
 .admin-section-header {
-  margin-bottom: 18px;
+  margin-bottom: var(--space-6);
 }
 
 .admin-section-title {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--text);
 }
@@ -131,42 +142,47 @@ body { min-height: 100dvh; }
 .admin-section-sub {
   font-size: 13px;
   color: var(--text-muted);
-  margin-top: 4px;
-  line-height: 1.5;
+  margin-top: var(--space-1);
+  line-height: 1.55;
 }
 
 .admin-link {
-  color: var(--tm-navy-2);
+  color: var(--text);
   text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--t-fast) var(--ease-out);
 }
+.admin-link:hover { text-decoration-color: var(--accent); }
 
 /* ── Cards ────────────────────────────────────────────────────────────────── */
 .admin-card {
   background: var(--surface-flat);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  padding: 18px 20px;
-  margin-bottom: 20px;
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
 }
 
 .admin-card-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 14px;
+  margin-bottom: var(--space-4);
+  letter-spacing: -0.005em;
 }
 
 /* ── Tables / lists ───────────────────────────────────────────────────────── */
 .admin-table-wrap {
   background: var(--surface-flat);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border);
   border-radius: var(--r-lg);
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .admin-loading {
-  padding: 32px 20px;
+  padding: var(--space-7) var(--space-5);
   text-align: center;
   color: var(--text-muted);
   font-size: 14px;
@@ -175,11 +191,13 @@ body { min-height: 100dvh; }
 .admin-table-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--t-fast) var(--ease-out);
 }
 .admin-table-row:last-child { border-bottom: none; }
+.admin-table-row:hover { background: var(--surface-flat-2); }
 
 .admin-table-cell { flex: 1; min-width: 0; }
 
@@ -190,6 +208,7 @@ body { min-height: 100dvh; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.005em;
 }
 
 .admin-cell-meta {
@@ -214,21 +233,22 @@ body { min-height: 100dvh; }
 
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
 .admin-btn-primary {
-  background: var(--gradient-navy);
-  border: none;
+  background: var(--accent);
+  border: 1px solid var(--accent);
   border-radius: var(--r-md);
   color: #fff;
   font-family: var(--font);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  padding: 10px 20px;
+  padding: 8px 16px;
   cursor: pointer;
-  box-shadow: var(--glow-navy);
-  transition: opacity var(--t-fast);
+  transition: background var(--t-fast) var(--ease-out),
+              border-color var(--t-fast) var(--ease-out);
   white-space: nowrap;
   flex-shrink: 0;
+  letter-spacing: -0.005em;
 }
-.admin-btn-primary:hover { opacity: 0.9; }
+.admin-btn-primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
 .admin-btn-primary:active { transform: scale(0.98); }
 .admin-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -470,34 +490,39 @@ body { min-height: 100dvh; }
 /* ── Submissions Tab ─────────────────────────────────────────────────────── */
 .admin-filters {
   display: flex;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
   flex-wrap: wrap;
 }
 
 .admin-select {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: var(--surface-flat);
+  border: 1px solid var(--border-strong);
   color: var(--text);
-  border-radius: 8px;
+  border-radius: var(--r-md);
   padding: 8px 12px;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: var(--font);
   min-width: 180px;
   cursor: pointer;
+  transition: background var(--t-fast) var(--ease-out),
+              border-color var(--t-fast) var(--ease-out);
 }
+.admin-select:hover  { background: var(--surface-flat-2); }
+.admin-select:focus  { outline: none; border-color: var(--accent); box-shadow: var(--shadow-focus); }
 
 .sub-type-icon {
-  font-size: 20px;
+  font-size: 18px;
   flex-shrink: 0;
-  width: 28px;
+  width: 24px;
   text-align: center;
+  opacity: 0.92;
 }
 
 .sub-no-pdf {
   font-size: 12px;
-  color: var(--text-muted);
-  padding: 8px 12px;
+  color: var(--text-dim);
+  padding: 6px 12px;
 }
 
 /* ── By Project — summary report ─────────────────────────────────────────── */

@@ -2,20 +2,22 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:            #0a0a0a;
-  --surface:       #141418;
-  --surface-2:     #1c1c22;
-  --border:        rgba(255,255,255,0.08);
-  --border-strong: rgba(255,255,255,0.13);
-  --text:          #f0f0f0;
-  --text-muted:    #8a8a9a;
-  --accent:        #C0272D;
+  --bg:            #0a0b0e;
+  --surface:       #181a20;
+  --surface-2:     #1d1f26;
+  --border:        rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.10);
+  --text:          #ecedee;
+  --text-muted:    #8b8d96;
+  --text-dim:      #5b5d65;
+  --accent:        #c0272d;
   --accent-dark:   #9a1e23;
+  --accent-ring:   rgba(192,39,45,0.28);
   --tm-red:        #8a2a2b;
   --error:         #f87171;
   --success:       #4ade80;
   --radius:        14px;
-  --radius-sm:     8px;
+  --radius-sm:     6px;
   --font:          'Inter', system-ui, -apple-system, sans-serif;
 }
 
