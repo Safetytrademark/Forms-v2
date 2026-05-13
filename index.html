@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=9">
+  <link rel="stylesheet" href="css/styles.css?v=10">
   <!-- Supabase JS client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -345,54 +345,83 @@
         </select>
       </div>
 
-      <!-- Needed by -->
-      <div class="field-group">
-        <label class="field-label" for="delivNeededBy">Needed By</label>
-        <input class="field-input" type="date" id="delivNeededBy">
-      </div>
-      <div class="field-group">
-        <label class="field-label" for="delivNeededByTime">Needed By Time</label>
-        <input class="field-input" type="text" id="delivNeededByTime"
-          placeholder="e.g. 7:00 AM, after lunch, EOD" autocomplete="off">
-      </div>
-
-      <!-- 20cm Blocks -->
-      <div class="delivery-section-title">🧱 20cm Blocks</div>
-      <div class="delivery-block-grid">
-        <div class="delivery-block-row"><label>Standards 2H</label><input class="field-input delivery-qty" type="number" min="0" id="b20_standards_2h" placeholder="0"></div>
-        <div class="delivery-block-row"><label>Bondbeams</label>   <input class="field-input delivery-qty" type="number" min="0" id="b20_bondbeams"   placeholder="0"></div>
-        <div class="delivery-block-row"><label>Halves</label>      <input class="field-input delivery-qty" type="number" min="0" id="b20_halves"      placeholder="0"></div>
-        <div class="delivery-block-row"><label>Multiblock</label>  <input class="field-input delivery-qty" type="number" min="0" id="b20_multiblock"  placeholder="0"></div>
-        <div class="delivery-block-row"><label>Squints</label>     <input class="field-input delivery-qty" type="number" min="0" id="b20_squints"     placeholder="0"></div>
+      <!-- Date + Time on same row -->
+      <div class="delivery-row-2col">
+        <div class="field-group">
+          <label class="field-label" for="delivNeededBy">Needed By</label>
+          <input class="field-input" type="date" id="delivNeededBy">
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="delivNeededByTime">Time</label>
+          <input class="field-input" type="text" id="delivNeededByTime"
+            placeholder="e.g. 7:00 AM" autocomplete="off">
+        </div>
       </div>
 
-      <!-- 25cm Blocks -->
-      <div class="delivery-section-title">🧱 25cm Blocks</div>
-      <div class="delivery-block-grid">
-        <div class="delivery-block-row"><label>Standards 2H</label><input class="field-input delivery-qty" type="number" min="0" id="b25_standards_2h" placeholder="0"></div>
-        <div class="delivery-block-row"><label>Bondbeams</label>   <input class="field-input delivery-qty" type="number" min="0" id="b25_bondbeams"   placeholder="0"></div>
-        <div class="delivery-block-row"><label>Halves</label>      <input class="field-input delivery-qty" type="number" min="0" id="b25_halves"      placeholder="0"></div>
+      <!-- Type tabs -->
+      <div class="deliv-tabs">
+        <button class="deliv-tab active" id="delivTabBlock" onclick="switchDelivTab('block')">🧱 Block Delivery</button>
+        <button class="deliv-tab"        id="delivTabOther" onclick="switchDelivTab('other')">📋 Other Materials</button>
       </div>
 
-      <!-- 30cm Blocks -->
-      <div class="delivery-section-title">🧱 30cm Blocks</div>
-      <div class="delivery-block-grid">
-        <div class="delivery-block-row"><label>Standards 2H</label><input class="field-input delivery-qty" type="number" min="0" id="b30_standards_2h" placeholder="0"></div>
-        <div class="delivery-block-row"><label>Bondbeams</label>   <input class="field-input delivery-qty" type="number" min="0" id="b30_bondbeams"   placeholder="0"></div>
-        <div class="delivery-block-row"><label>Halves</label>      <input class="field-input delivery-qty" type="number" min="0" id="b30_halves"      placeholder="0"></div>
+      <!-- ── Block Delivery panel ──────────────────────────────────────────── -->
+      <div id="delivPanelBlock">
+
+        <!-- 20cm -->
+        <div class="delivery-section-title">20cm Blocks</div>
+        <div class="delivery-block-grid-2col">
+          <div class="delivery-block-item"><label>Standards 2H</label>    <input class="field-input delivery-qty" type="number" min="0" id="b20_standards_2h" placeholder="0"></div>
+          <div class="delivery-block-item"><label>Bondbeams</label>        <input class="field-input delivery-qty" type="number" min="0" id="b20_bondbeams"    placeholder="0"></div>
+          <div class="delivery-block-item"><label>Halves</label>           <input class="field-input delivery-qty" type="number" min="0" id="b20_halves"       placeholder="0"></div>
+          <div class="delivery-block-item"><label>Multiblock</label>       <input class="field-input delivery-qty" type="number" min="0" id="b20_multiblock"   placeholder="0"></div>
+          <div class="delivery-block-item"><label>Squints</label>          <input class="field-input delivery-qty" type="number" min="0" id="b20_squints"      placeholder="0"></div>
+          <div class="delivery-block-item"><label>Block Lock Bundle</label><input class="field-input delivery-qty" type="number" min="0" id="b20_block_lock"   placeholder="0"></div>
+          <div class="delivery-block-item"><label>Wall Mesh</label>        <input class="field-input delivery-qty" type="number" min="0" id="b20_wall_mesh"    placeholder="0"></div>
+        </div>
+
+        <!-- 25cm -->
+        <div class="delivery-section-title">25cm Blocks</div>
+        <div class="delivery-block-grid-2col">
+          <div class="delivery-block-item"><label>Standards 2H</label>    <input class="field-input delivery-qty" type="number" min="0" id="b25_standards_2h" placeholder="0"></div>
+          <div class="delivery-block-item"><label>Bondbeams</label>        <input class="field-input delivery-qty" type="number" min="0" id="b25_bondbeams"    placeholder="0"></div>
+          <div class="delivery-block-item"><label>Halves</label>           <input class="field-input delivery-qty" type="number" min="0" id="b25_halves"       placeholder="0"></div>
+          <div class="delivery-block-item"><label>Block Lock Bundle</label><input class="field-input delivery-qty" type="number" min="0" id="b25_block_lock"   placeholder="0"></div>
+          <div class="delivery-block-item"><label>Wall Mesh</label>        <input class="field-input delivery-qty" type="number" min="0" id="b25_wall_mesh"    placeholder="0"></div>
+        </div>
+
+        <!-- 30cm -->
+        <div class="delivery-section-title">30cm Blocks</div>
+        <div class="delivery-block-grid-2col">
+          <div class="delivery-block-item"><label>Standards 2H</label>    <input class="field-input delivery-qty" type="number" min="0" id="b30_standards_2h" placeholder="0"></div>
+          <div class="delivery-block-item"><label>Bondbeams</label>        <input class="field-input delivery-qty" type="number" min="0" id="b30_bondbeams"    placeholder="0"></div>
+          <div class="delivery-block-item"><label>Halves</label>           <input class="field-input delivery-qty" type="number" min="0" id="b30_halves"       placeholder="0"></div>
+          <div class="delivery-block-item"><label>Block Lock Bundle</label><input class="field-input delivery-qty" type="number" min="0" id="b30_block_lock"   placeholder="0"></div>
+          <div class="delivery-block-item"><label>Wall Mesh</label>        <input class="field-input delivery-qty" type="number" min="0" id="b30_wall_mesh"    placeholder="0"></div>
+        </div>
+
+        <!-- Materials -->
+        <div class="delivery-section-title">🪣 Materials</div>
+        <div class="delivery-block-grid-2col">
+          <div class="delivery-block-item"><label>Mortar Tek</label><input class="field-input delivery-qty" type="number" min="0" id="mat_mortar_tek" placeholder="0"></div>
+          <div class="delivery-block-item"><label>Blockfill</label> <input class="field-input delivery-qty" type="number" min="0" id="mat_blockfill"  placeholder="0"></div>
+        </div>
+
+      </div><!-- /#delivPanelBlock -->
+
+      <!-- ── Other Materials panel ─────────────────────────────────────────── -->
+      <div id="delivPanelOther" style="display:none">
+        <div class="field-group" style="margin-top:12px">
+          <label class="field-label" for="delivOtherDesc">Describe what you need *</label>
+          <textarea class="field-input" id="delivOtherDesc" rows="6"
+            placeholder="e.g. 10 bags of cement, 2 pallets of sand, reinforcement bars…"
+            style="resize:vertical"></textarea>
+        </div>
       </div>
 
-      <!-- Materials -->
-      <div class="delivery-section-title">🪣 Materials</div>
-      <div class="delivery-block-grid">
-        <div class="delivery-block-row"><label>Mortar Tek</label>  <input class="field-input delivery-qty" type="number" min="0" id="mat_mortar_tek" placeholder="0"></div>
-        <div class="delivery-block-row"><label>Blockfill</label>   <input class="field-input delivery-qty" type="number" min="0" id="mat_blockfill"  placeholder="0"></div>
-      </div>
-
-      <!-- Notes -->
+      <!-- Notes (shared) -->
       <div class="field-group" style="margin-top:8px">
         <label class="field-label" for="delivNotes">Notes / Special Instructions</label>
-        <textarea class="field-input" id="delivNotes" rows="3"
+        <textarea class="field-input" id="delivNotes" rows="2"
           placeholder="e.g. deliver to south gate, call before arriving…" style="resize:vertical"></textarea>
       </div>
 
@@ -422,14 +451,14 @@
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
 <!-- App scripts (order matters) — bump ?v=N when editing to bust cache -->
-<script src="js/supabase-client.js?v=9"></script>
-<script src="js/auth.js?v=9"></script>
-<script src="js/delivery.js?v=9"></script>
-<script src="js/logo.js?v=9"></script>
-<script src="js/form-configs.js?v=9"></script>
-<script src="js/pdf-generator.js?v=9"></script>
-<script src="js/api.js?v=9"></script>
-<script src="js/app.js?v=9"></script>
+<script src="js/supabase-client.js?v=10"></script>
+<script src="js/auth.js?v=10"></script>
+<script src="js/delivery.js?v=10"></script>
+<script src="js/logo.js?v=10"></script>
+<script src="js/form-configs.js?v=10"></script>
+<script src="js/pdf-generator.js?v=10"></script>
+<script src="js/api.js?v=10"></script>
+<script src="js/app.js?v=10"></script>
 
 </body>
 </html>

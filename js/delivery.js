@@ -2,6 +2,15 @@
 // Handles the 📦 "Request Delivery" modal for foremans.
 // Saves requests to Supabase delivery_requests table.
 
+// ── Tab switcher ──────────────────────────────────────────────────────────────
+function switchDelivTab(tab) {
+  const isBlock = tab === 'block';
+  document.getElementById('delivTabBlock').classList.toggle('active',  isBlock);
+  document.getElementById('delivTabOther').classList.toggle('active', !isBlock);
+  document.getElementById('delivPanelBlock').style.display = isBlock ? '' : 'none';
+  document.getElementById('delivPanelOther').style.display = isBlock ? 'none' : '';
+}
+
 // ── Open / Close modal ────────────────────────────────────────────────────────
 function openDeliveryModal() {
   // Populate project dropdown from the logged-in user's assigned projects
@@ -20,12 +29,19 @@ function openDeliveryModal() {
     neededByEl.value = tomorrow.toISOString().split('T')[0];
   }
 
-  // Reset quantities, time and error
+  // Reset all qty inputs, textareas, error
   document.querySelectorAll('.delivery-qty').forEach(el => { el.value = ''; });
   const timeEl = document.getElementById('delivNeededByTime');
   if (timeEl) timeEl.value = '';
+  const otherEl = document.getElementById('delivOtherDesc');
+  if (otherEl) otherEl.value = '';
+  const notesEl = document.getElementById('delivNotes');
+  if (notesEl) notesEl.value = '';
   const errEl = document.getElementById('deliveryError');
   if (errEl) errEl.textContent = '';
+
+  // Always open on Block tab
+  switchDelivTab('block');
 
   document.getElementById('deliveryModal').style.display = 'flex';
 }
@@ -44,17 +60,23 @@ function buildDeliveryItems() {
       bondbeams:    qty('b20_bondbeams'),
       halves:       qty('b20_halves'),
       multiblock:   qty('b20_multiblock'),
-      squints:      qty('b20_squints')
+      squints:      qty('b20_squints'),
+      block_lock:   qty('b20_block_lock'),
+      wall_mesh:    qty('b20_wall_mesh')
     },
     '25cm': {
       standards_2h: qty('b25_standards_2h'),
       bondbeams:    qty('b25_bondbeams'),
-      halves:       qty('b25_halves')
+      halves:       qty('b25_halves'),
+      block_lock:   qty('b25_block_lock'),
+      wall_mesh:    qty('b25_wall_mesh')
     },
     '30cm': {
       standards_2h: qty('b30_standards_2h'),
       bondbeams:    qty('b30_bondbeams'),
-      halves:       qty('b30_halves')
+      halves:       qty('b30_halves'),
+      block_lock:   qty('b30_block_lock'),
+      wall_mesh:    qty('b30_wall_mesh')
     },
     mortar_tek: qty('mat_mortar_tek'),
     blockfill:  qty('mat_blockfill')
@@ -70,6 +92,10 @@ function totalItems(items) {
   return total;
 }
 
+function getActiveDelivTab() {
+  return document.getElementById('delivTabBlock')?.classList.contains('active') ? 'block' : 'other';
+}
+
 // ── Submit request ────────────────────────────────────────────────────────────
 async function submitDeliveryRequest() {
   const btn      = document.getElementById('deliverySubmitBtn');
@@ -79,6 +105,7 @@ async function submitDeliveryRequest() {
   const neededBy     = document.getElementById('delivNeededBy')?.value || null;
   const neededByTime = (document.getElementById('delivNeededByTime')?.value || '').trim() || null;
   const notes        = (document.getElementById('delivNotes')?.value || '').trim();
+  const activeTab    = getActiveDelivTab();
 
   if (errEl) errEl.textContent = '';
 
@@ -87,10 +114,21 @@ async function submitDeliveryRequest() {
     return;
   }
 
-  const items = buildDeliveryItems();
-  if (totalItems(items) === 0) {
-    if (errEl) errEl.textContent = 'Enter at least one item quantity.';
-    return;
+  let items;
+
+  if (activeTab === 'block') {
+    items = buildDeliveryItems();
+    if (totalItems(items) === 0) {
+      if (errEl) errEl.textContent = 'Enter at least one item quantity.';
+      return;
+    }
+  } else {
+    const desc = (document.getElementById('delivOtherDesc')?.value || '').trim();
+    if (!desc) {
+      if (errEl) errEl.textContent = 'Please describe what you need.';
+      return;
+    }
+    items = { other_materials: desc };
   }
 
   if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
@@ -125,6 +163,7 @@ async function submitDeliveryRequest() {
       const foremanName = window.currentProfile?.full_name || 'Foreman';
       const timeStr     = neededByTime ? ` at ${neededByTime}` : '';
       const dateStr     = neededBy     ? ` — needed by ${neededBy}${timeStr}` : '';
+      const tabLabel    = activeTab === 'other' ? ' [Other Materials]' : '';
       await fetch('https://ntfy.sh/tm-delivery-zrrqug', {
         method: 'POST',
         headers: {
@@ -132,7 +171,7 @@ async function submitDeliveryRequest() {
           'Priority': 'high',
           'Tags':     'package,construction'
         },
-        body: `${projName}${dateStr}\nRequested by ${foremanName}`
+        body: `${projName}${tabLabel}${dateStr}\nRequested by ${foremanName}`
       });
     } catch (_) { /* silent — notification is best-effort */ }
 
