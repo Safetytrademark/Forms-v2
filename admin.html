@@ -36,6 +36,7 @@
   <button class="admin-tab" data-tab="documents"         onclick="switchTab('documents')">📄 Documents</button>
   <button class="admin-tab" data-tab="deliveries"        onclick="switchTab('deliveries')">📦 Deliveries</button>
   <button class="admin-tab" data-tab="by-project"        onclick="switchTab('by-project')">📊 By Project</button>
+  <button class="admin-tab" data-tab="submissions"       onclick="switchTab('submissions')">📋 Submissions</button>
 </div>
 
 <!-- ── Main Content ──────────────────────────────────────────────────────── -->
@@ -165,6 +166,39 @@
     </div>
     <div id="byProjectList">
       <div class="proj-report-prompt">👆 Select a project above to see the materials summary.</div>
+    </div>
+  </section>
+
+  <!-- ── Submissions Tab ───────────────────────────────────────────────── -->
+  <section class="admin-panel" id="tab-submissions">
+    <div class="admin-section-header">
+      <h2 class="admin-section-title">Form Submissions</h2>
+      <p class="admin-section-sub">All submitted forms by foremans — filter by project or type.</p>
+    </div>
+
+    <div class="admin-filters">
+      <select id="subFilterProject" onchange="loadSubmissions()" class="admin-select">
+        <option value="">All Projects</option>
+      </select>
+      <select id="subFilterType" onchange="loadSubmissions()" class="admin-select">
+        <option value="">All Types</option>
+        <option>Daily Tailgate</option>
+        <option>Weekly Toolbox Talk</option>
+        <option>Incident Report</option>
+        <option>Hazard Observation</option>
+        <option>QAQC-Foreman</option>
+        <option>Site Photos Only</option>
+        <option>Weekly Timesheet</option>
+        <option>Production Report</option>
+        <option>Telehandler Inspection</option>
+        <option>Forklift Inspection</option>
+        <option>E-Pallet Jack Inspection</option>
+        <option>Scaffolding Inspection</option>
+      </select>
+    </div>
+
+    <div id="submissionsList" class="admin-table-wrap">
+      <div class="admin-loading">Loading submissions…</div>
     </div>
   </section>
 

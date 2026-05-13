@@ -467,6 +467,39 @@ body { min-height: 100dvh; }
 }
 .delivery-item-other span { color: var(--text); }
 
+/* ── Submissions Tab ─────────────────────────────────────────────────────── */
+.admin-filters {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.admin-select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  min-width: 180px;
+  cursor: pointer;
+}
+
+.sub-type-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  width: 28px;
+  text-align: center;
+}
+
+.sub-no-pdf {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 8px 12px;
+}
+
 /* ── By Project — summary report ─────────────────────────────────────────── */
 .proj-report-prompt {
   font-size: 14px;

@@ -115,6 +115,18 @@ ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "sub: foreman insert own" ON public.submissions FOR INSERT WITH CHECK (foreman_id = auth.uid());
 CREATE POLICY "sub: foreman reads own"  ON public.submissions FOR SELECT USING (foreman_id = auth.uid() OR public.is_admin());
 
+-- ── SUBMISSIONS — add pdf_url + foreman_name (migration) ─────────────────────
+-- Run this block if the submissions table was already created without these columns.
+ALTER TABLE public.submissions
+  ADD COLUMN IF NOT EXISTS pdf_url      TEXT,
+  ADD COLUMN IF NOT EXISTS foreman_name TEXT;
+
+-- Storage bucket "form-submissions" must be created manually:
+--   Storage → New bucket → name: form-submissions → Public: NO
+-- Then add these policies on that bucket:
+--   INSERT: bucket_id = 'form-submissions' AND auth.uid() IS NOT NULL
+--   SELECT: bucket_id = 'form-submissions' AND public.is_admin()
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- AFTER RUNNING THIS SCHEMA:
 --

@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (lbl) lbl.textContent = profile.full_name || adminCurrentUser.email;
 
   // Load all tabs
-  await Promise.all([loadForemans(), loadProjects(), loadDocuments(), loadDeliveries(), loadByProject()]);
+  await Promise.all([loadForemans(), loadProjects(), loadDocuments(), loadDeliveries(), loadByProject(), loadSubmissions()]);
 });
 
 // ── Sign out ──────────────────────────────────────────────────────────────────
@@ -581,6 +581,78 @@ async function loadByProject() {
         }
       </div>
     </div>`;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  SUBMISSIONS TAB
+// ═════════════════════════════════════════════════════════════════════════════
+async function loadSubmissions() {
+  const wrap       = document.getElementById('submissionsList');
+  const projFilter = document.getElementById('subFilterProject');
+  const typeFilter = document.getElementById('subFilterType');
+  if (!wrap) return;
+
+  // Populate project dropdown on first call
+  if (projFilter && projFilter.options.length <= 1) {
+    const { data: projects } = await sbClient
+      .from('projects').select('name').order('name');
+    if (projects?.length) {
+      projFilter.innerHTML = '<option value="">All Projects</option>' +
+        projects.map(p => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
+    }
+  }
+
+  wrap.innerHTML = '<div class="admin-loading">Loading…</div>';
+
+  let query = sbClient
+    .from('submissions')
+    .select('id, foreman_name, project_name, submission_type, submitted_at, pdf_url')
+    .order('submitted_at', { ascending: false })
+    .limit(200);
+
+  if (projFilter?.value) query = query.eq('project_name', projFilter.value);
+  if (typeFilter?.value) query = query.eq('submission_type', typeFilter.value);
+
+  const { data, error } = await query;
+
+  if (error) {
+    wrap.innerHTML = '<div class="admin-empty">Could not load submissions.</div>';
+    return;
+  }
+  if (!data?.length) {
+    wrap.innerHTML = '<div class="admin-empty">No submissions found.</div>';
+    return;
+  }
+
+  const typeIcons = {
+    'Daily Tailgate':          '☀️',
+    'Weekly Toolbox Talk':     '🛠️',
+    'Incident Report':         '🚨',
+    'Hazard Observation':      '⚠️',
+    'QAQC-Foreman':            '✅',
+    'Site Photos Only':        '📷',
+    'Weekly Timesheet':        '🕐',
+    'Production Report':       '📊',
+    'Telehandler Inspection':  '🏗️',
+    'Forklift Inspection':     '🚜',
+    'E-Pallet Jack Inspection':'⚡',
+    'Scaffolding Inspection':  '🪜',
+  };
+
+  wrap.innerHTML = data.map(s => `
+    <div class="admin-table-row">
+      <span class="sub-type-icon">${typeIcons[s.submission_type] || '📋'}</span>
+      <div class="admin-table-cell">
+        <div class="admin-cell-name">${esc(s.submission_type)}</div>
+        <div class="admin-cell-meta">
+          ${esc(s.foreman_name || '—')} &nbsp;·&nbsp; ${esc(s.project_name || '—')} &nbsp;·&nbsp; ${formatDate(s.submitted_at)}
+        </div>
+      </div>
+      ${s.pdf_url
+        ? `<a class="admin-btn-icon" href="${s.pdf_url}" target="_blank" rel="noopener">⬇ PDF</a>`
+        : `<span class="sub-no-pdf">No PDF</span>`
+      }
+    </div>`).join('');
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
