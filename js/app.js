@@ -1897,16 +1897,18 @@ async function handleSubmit() {
         const pdfBlob    = new Blob([pdfBuffer], { type: 'application/pdf' });
         const { error: upErr } = await sbClient.storage
           .from('form-submissions')
-          .upload(storageKey, pdfBlob, { contentType: 'application/pdf', upsert: false });
-        if (!upErr) {
-          const { data: urlData } = await sbClient.storage
+          .upload(storageKey, pdfBlob, { contentType: 'application/pdf', upsert: true });
+        if (upErr) {
+          console.error('Storage upload error:', upErr);
+        } else {
+          const { data: urlData } = sbClient.storage
             .from('form-submissions')
-            .createSignedUrl(storageKey, 60 * 60 * 24 * 365);
-          pdfStorageUrl = urlData?.signedUrl || null;
+            .getPublicUrl(storageKey);
+          pdfStorageUrl = urlData?.publicUrl || null;
         }
       }
     } catch (upErr) {
-      console.warn('PDF upload to storage failed:', upErr);
+      console.error('PDF upload to storage failed:', upErr);
     }
 
     // ── Log submission to Supabase (always, before email) ────────────────────
