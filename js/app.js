@@ -1900,6 +1900,7 @@ async function handleSubmit() {
           .upload(storageKey, pdfBlob, { contentType: 'application/pdf', upsert: true });
         if (upErr) {
           console.error('Storage upload error:', upErr);
+          showToast(`Storage error: ${upErr.message}`, 'warning');
         } else {
           const { data: urlData } = sbClient.storage
             .from('form-submissions')
