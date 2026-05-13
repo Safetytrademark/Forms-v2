@@ -1517,6 +1517,62 @@ body::after {
 .toast-warning { border-left: 2px solid var(--warning); }
 .toast-info    { border-left: 2px solid var(--info);    }
 
+/* ── Draft Banner ────────────────────────────────────────────────────────── */
+.draft-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+.draft-banner-msg {
+  font-size: 13px;
+  color: var(--text-muted);
+  flex: 1;
+  min-width: 0;
+}
+
+.draft-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.draft-save-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font);
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.draft-save-btn:hover { opacity: 0.85; }
+
+.draft-clear-btn {
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font);
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.draft-clear-btn:hover { color: var(--error); border-color: var(--error); }
+
 /* ── Weekly Inspection ──────────────────────────────────────────────────── */
 .insp-notice {
   background: var(--surface);

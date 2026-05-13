@@ -141,7 +141,7 @@ async function checkTailgateToday() {
 
 // ── Start form flow for a specific pre-selected type ──────────────────────────
 // Project + type are already known from the dashboard — jump straight to the form.
-function startSpecificFormFlow(type) {
+async function startSpecificFormFlow(type) {
   const projSel = document.getElementById('dashProjectSelect');
   const project = projSel?.value || '';
 
@@ -159,7 +159,18 @@ function startSpecificFormFlow(type) {
   state.submissionType = type;
   state.allowedTypes   = [type];
   state.fromDashboard  = true;
-  state.photos         = [];      // clear any leftover photos from a previous form
+  state.photos         = [];
+  state._pendingDraft  = null;
+  state._draftSavedAt  = null;
+
+  // Pre-load draft for draftable forms before rendering
+  if (DRAFTABLE_FORMS.includes(type)) {
+    const draft = await loadDraftData(type);
+    if (draft) {
+      state._pendingDraft = draft.form_data;
+      state._draftSavedAt = draft.updated_at;
+    }
+  }
 
   const typeGrid = document.getElementById('typeGrid');
   if (typeGrid) typeGrid.innerHTML = '';
@@ -174,8 +185,6 @@ function startSpecificFormFlow(type) {
   if (progressWrap) progressWrap.style.display = '';
   if (navBar)       navBar.style.display      = '';
 
-  // Skip steps 1 (info) and 2 (project/type) — both were handled on the dashboard.
-  // Jump directly to step 3 (the actual form).
   state.currentStep = 3;
   renderStep(3);
   updateProgressBar(3);
@@ -335,11 +344,21 @@ function attachNavListeners() {
       showHomeDashboard();
     }
   });
-  document.getElementById('btnNext').addEventListener('click', () => {
-    if (validateStep(state.currentStep)) {
-      if (state.currentStep < 4) goToStep(state.currentStep + 1);
-      else handleSubmit();
+  document.getElementById('btnNext').addEventListener('click', async () => {
+    if (!validateStep(state.currentStep)) return;
+    if (state.currentStep === 4) { handleSubmit(); return; }
+
+    // For draftable forms, pre-load draft before rendering step 3
+    if (state.currentStep === 2 && DRAFTABLE_FORMS.includes(state.submissionType)) {
+      state._pendingDraft = null;
+      state._draftSavedAt = null;
+      const draft = await loadDraftData(state.submissionType);
+      if (draft) {
+        state._pendingDraft = draft.form_data;
+        state._draftSavedAt = draft.updated_at;
+      }
     }
+    goToStep(state.currentStep + 1);
   });
 }
 
@@ -450,6 +469,32 @@ function renderStep3() {
   state.fields    = {};        // clear stale field data on every form switch
   state.signature = null;
   window._signaturePad = null;
+
+  // ── Restore draft if available ────────────────────────────────────────────
+  if (state._pendingDraft) {
+    Object.assign(state.fields, state._pendingDraft);
+    state._pendingDraft = null;
+  }
+
+  // ── Draft banner (draftable forms only) ───────────────────────────────────
+  if (DRAFTABLE_FORMS.includes(state.submissionType)) {
+    const savedAt = state._draftSavedAt
+      ? new Date(state._draftSavedAt).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : null;
+
+    const banner = document.createElement('div');
+    banner.className = 'draft-banner';
+    banner.innerHTML = savedAt
+      ? `<span class="draft-banner-msg">📂 Draft restored · <span id="draftSavedAt">Last saved ${savedAt}</span></span>
+         <div class="draft-banner-actions">
+           <button type="button" class="draft-save-btn" onclick="saveDraft()">💾 Save Progress</button>
+           <button type="button" class="draft-clear-btn" onclick="clearDraftAndReset()">✕ Clear</button>
+         </div>`
+      : `<span class="draft-banner-msg">Fill in a bit each day — save as you go</span>
+         <button type="button" class="draft-save-btn" onclick="saveDraft()">💾 Save Progress</button>`;
+    container.appendChild(banner);
+    state._draftSavedAt = null;
+  }
 
   // ── Date field (always first — was previously in step 1) ──────────────────
   const dateWrapper = document.createElement('div');
@@ -1871,6 +1916,70 @@ function triggerDownload(buffer, filename) {
   }
 }
 
+// ── Draft Save / Load (Weekly Timesheet & Production Report) ─────────────────
+const DRAFTABLE_FORMS = ['Weekly Timesheet', 'Production Report'];
+
+function currentWeekMonday() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  return d.toISOString().slice(0, 10);
+}
+
+async function saveDraft() {
+  if (!window.currentUser) return;
+  const weekOf = currentWeekMonday();
+  const fieldsToSave = Object.assign({}, state.fields);
+  delete fieldsToSave.signature; // never persist signature
+
+  const { error } = await sbClient.from('drafts').upsert({
+    foreman_id: window.currentUser.id,
+    form_type:  state.submissionType,
+    week_of:    weekOf,
+    form_data:  fieldsToSave,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'foreman_id,form_type,week_of' });
+
+  if (error) {
+    showToast('Could not save draft.', 'error');
+    console.warn('Draft save failed:', error);
+  } else {
+    showToast('Progress saved!', 'success');
+    const ts = document.getElementById('draftSavedAt');
+    if (ts) ts.textContent = 'Last saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+}
+
+async function loadDraftData(formType) {
+  if (!window.currentUser) return null;
+  const weekOf = currentWeekMonday();
+  const { data, error } = await sbClient
+    .from('drafts')
+    .select('form_data, updated_at')
+    .eq('foreman_id', window.currentUser.id)
+    .eq('form_type', formType)
+    .eq('week_of', weekOf)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data;
+}
+
+async function deleteDraft() {
+  if (!window.currentUser) return;
+  await sbClient.from('drafts').delete()
+    .eq('foreman_id', window.currentUser.id)
+    .eq('form_type', state.submissionType)
+    .eq('week_of', currentWeekMonday());
+}
+
+async function clearDraftAndReset() {
+  await deleteDraft();
+  state.fields = {};
+  renderStep3();
+  showToast('Draft cleared.', 'info');
+}
+
 // ── Submit ────────────────────────────────────────────────────────────────────
 async function handleSubmit() {
   const btn = document.getElementById('btnNext');
@@ -1914,6 +2023,11 @@ async function handleSubmit() {
 
     // ── Download PDF only after email is confirmed sent ───────────────────────
     triggerDownload(pdfBuffer, pdfFilename);
+
+    // ── Delete draft on successful submission ─────────────────────────────────
+    if (DRAFTABLE_FORMS.includes(state.submissionType)) {
+      deleteDraft().catch(() => {});
+    }
 
     showSuccessScreen(result, pdfFilename);
 
