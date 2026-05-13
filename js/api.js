@@ -10,7 +10,7 @@ async function checkBackendHealth() {
   }
 }
 
-async function submitToOneDrive(formData, pdfBuffer, photos) {
+async function submitForm(formData, pdfBuffer, photos) {
   const data = new FormData();
 
   // Core metadata
@@ -45,34 +45,3 @@ async function submitToOneDrive(formData, pdfBuffer, photos) {
   return res.json();
 }
 
-async function downloadFallbackZip(formData, pdfBuffer, photos) {
-  // Fallback: create a ZIP file for manual saving to OneDrive
-  if (!window.JSZip) throw new Error('JSZip not loaded');
-
-  const zip = new JSZip();
-  const folderName = `${formData.submissionType.replace(/\s+/g, '_')}_${formData.project.substring(0, 20).replace(/\s+/g, '_')}_${formData.date}`;
-
-  // Add PDF
-  zip.file(`${folderName}/${buildFileName(formData)}`, pdfBuffer);
-
-  // Add photos
-  for (let i = 0; i < photos.length; i++) {
-    const buf = await photos[i].arrayBuffer();
-    const ext = photos[i].name?.split('.').pop() || 'jpg';
-    zip.file(`${folderName}/Photos/photo_${String(i + 1).padStart(2, '0')}.${ext}`, buf);
-  }
-
-  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
-
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `${folderName}.zip`;
-  link.click();
-  URL.revokeObjectURL(link.href);
-
-  return {
-    success: true,
-    offline: true,
-    message: `ZIP downloaded. Save it to:\nOneDrive → Safety Documents → ${formData.project} → ${TYPE_TO_FOLDER[formData.submissionType]}`
-  };
-}

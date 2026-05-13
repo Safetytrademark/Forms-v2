@@ -55,6 +55,13 @@ function buildDeliveryItems() {
   const qty = id => Math.max(0, parseInt(document.getElementById(id)?.value || '0', 10) || 0);
 
   return {
+    '15cm': {
+      standards_2h: qty('b15_standards_2h'),
+      bondbeams:    qty('b15_bondbeams'),
+      halves:       qty('b15_halves'),
+      block_lock:   qty('b15_block_lock'),
+      wall_mesh:    qty('b15_wall_mesh')
+    },
     '20cm': {
       standards_2h: qty('b20_standards_2h'),
       bondbeams:    qty('b20_bondbeams'),
@@ -85,7 +92,7 @@ function buildDeliveryItems() {
 
 function totalItems(items) {
   let total = 0;
-  ['20cm','25cm','30cm'].forEach(size => {
+  ['15cm','20cm','25cm','30cm'].forEach(size => {
     if (items[size]) Object.values(items[size]).forEach(v => { total += v; });
   });
   total += (items.mortar_tek || 0) + (items.blockfill || 0);

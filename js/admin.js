@@ -433,7 +433,7 @@ function formatDeliveryItems(items) {
   }
 
   const lines = [];
-  const blockSizes = ['20cm', '25cm', '30cm'];
+  const blockSizes = ['15cm', '20cm', '25cm', '30cm'];
   const blockTypes = {
     standards_2h: 'Standards 2H',
     bondbeams:    'Bondbeams',
@@ -509,8 +509,8 @@ async function loadByProject() {
     halves: 'Halves', multiblock: 'Multiblock', squints: 'Squints',
     block_lock: 'Block Lock Bundle', wall_mesh: 'Wall Mesh'
   };
-  const sizes = ['20cm', '25cm', '30cm'];
-  const totals = { '20cm': {}, '25cm': {}, '30cm': {}, mortar_tek: 0, blockfill: 0 };
+  const sizes = ['15cm', '20cm', '25cm', '30cm'];
+  const totals = { '15cm': {}, '20cm': {}, '25cm': {}, '30cm': {}, mortar_tek: 0, blockfill: 0 };
   const otherTexts = [];
   const statusCounts = { requested: 0, on_schedule: 0, delivered: 0 };
 
@@ -576,7 +576,7 @@ async function loadByProject() {
       </div>
       <div class="proj-report-body">
         ${hasAny
-          ? renderSize('20cm') + renderSize('25cm') + renderSize('30cm') + materialsSection + otherSection
+          ? renderSize('15cm') + renderSize('20cm') + renderSize('25cm') + renderSize('30cm') + materialsSection + otherSection
           : '<div class="admin-empty" style="padding:20px 0">No items specified in these requests.</div>'
         }
       </div>
