@@ -294,20 +294,34 @@ html, body {
   position: relative;
 }
 
+/* Mobile branding strip — oculto no desktop */
+.lp-mobile-brand { display: none; }
+
 /* ── Mobile ─────────────────────────────────────────────────────────────────── */
 @media (max-width: 700px) {
   .lp-shell { flex-direction: column; }
 
   .lp-hero {
     flex: none;
-    min-height: 300px;
-    padding: 28px 24px 32px;
+    min-height: 220px;
+    padding: 0;
     justify-content: flex-end;
     background-position: center top;
   }
 
+  .lp-hero-content { display: none; }
+
   .lp-hero-tagline { font-size: 12px; margin-bottom: 16px; }
   .lp-hero-pills { display: none; }
+
+  .lp-mobile-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--surface);
+    padding: 24px 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
 
   .lp-auth {
     width: 100%;
