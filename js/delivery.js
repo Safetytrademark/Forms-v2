@@ -159,21 +159,24 @@ async function submitDeliveryRequest() {
     }
 
     // ── Push notification to admin phone via ntfy.sh ──────────────────────────
+    // Uses JSON API to avoid CORS preflight issues from the browser
     try {
       const foremanName = window.currentProfile?.full_name || 'Foreman';
       const timeStr     = neededByTime ? ` at ${neededByTime}` : '';
       const dateStr     = neededBy     ? ` — needed by ${neededBy}${timeStr}` : '';
-      const tabLabel    = activeTab === 'other' ? ' [Other Materials]' : '';
-      await fetch('https://ntfy.sh/tm-delivery-zrrqug', {
+      const typeLabel   = activeTab === 'other' ? ' [Other Materials]' : ' [Block Delivery]';
+      await fetch('https://ntfy.sh', {
         method: 'POST',
-        headers: {
-          'Title':    '📦 New Delivery Request',
-          'Priority': 'high',
-          'Tags':     'package,construction'
-        },
-        body: `${projName}${tabLabel}${dateStr}\nRequested by ${foremanName}`
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic:    'tm-delivery-zrrqug',
+          title:    `📦 New Delivery — ${projName}`,
+          message:  `${typeLabel}${dateStr}\nRequested by ${foremanName}`,
+          priority: 4,
+          tags:     ['package', 'construction']
+        })
       });
-    } catch (_) { /* silent — notification is best-effort */ }
+    } catch (err) { console.warn('ntfy notification failed:', err); }
 
   } catch (err) {
     console.error('Delivery request failed:', err);
