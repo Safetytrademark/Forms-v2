@@ -1887,37 +1887,14 @@ async function handleSubmit() {
     const pdfBuffer   = await generatePDF(state, state.photos);
     const pdfFilename = buildPDFFilename();
 
-    btn.textContent = 'Saving...';
-
-    // ── Upload PDF to Supabase Storage (always, before email) ────────────────
-    let pdfStorageUrl = null;
-    try {
-      if (window.currentUser) {
-        const storageKey = `${window.currentUser.id}/${pdfFilename}`;
-        const pdfBlob    = new Blob([pdfBuffer], { type: 'application/pdf' });
-        const { error: upErr } = await sbClient.storage
-          .from('form-submissions')
-          .upload(storageKey, pdfBlob, { contentType: 'application/pdf', upsert: true });
-        if (upErr) {
-          console.error('Storage upload error:', upErr);
-          showToast(`Storage error: ${upErr.message}`, 'warning');
-        } else {
-          pdfStorageUrl = `${SUPABASE_URL}/storage/v1/object/public/form-submissions/${storageKey}`;
-        }
-      }
-    } catch (upErr) {
-      console.error('PDF upload to storage failed:', upErr);
-    }
-
-    // ── Log submission to Supabase (always, before email) ────────────────────
+    // ── Log submission to Supabase ────────────────────────────────────────────
     try {
       if (window.currentUser) {
         await sbClient.from('submissions').insert({
           foreman_id:      window.currentUser.id,
           foreman_name:    window.currentProfile?.full_name || '',
           project_name:    state.project,
-          submission_type: state.submissionType,
-          pdf_url:         pdfStorageUrl
+          submission_type: state.submissionType
         });
       }
     } catch (logErr) {

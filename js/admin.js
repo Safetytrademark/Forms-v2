@@ -650,7 +650,7 @@ async function loadSubmissions() {
       </div>
       ${s.pdf_url
         ? `<a class="admin-btn-icon" href="${s.pdf_url}" target="_blank" rel="noopener">⬇ PDF</a>`
-        : `<span class="sub-no-pdf">No PDF</span>`
+        : ''
       }
     </div>`).join('');
 }
