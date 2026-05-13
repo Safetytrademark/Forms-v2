@@ -155,16 +155,16 @@
   <!-- ── By Project Tab ────────────────────────────────────────────────── -->
   <section class="admin-panel" id="tab-by-project">
     <div class="admin-section-header">
-      <h2 class="admin-section-title">Materials by Project</h2>
-      <p class="admin-section-sub">All delivery requests grouped by project.</p>
+      <h2 class="admin-section-title">Materials Summary by Project</h2>
+      <p class="admin-section-sub">Total materials ordered per project — aggregated across all delivery requests.</p>
     </div>
-    <div style="margin-bottom:16px">
-      <select class="field-input field-select" id="byProjectFilter" onchange="loadByProject()" style="max-width:360px">
-        <option value="">All projects</option>
+    <div style="margin-bottom:20px">
+      <select class="field-input field-select" id="byProjectFilter" onchange="loadByProject()" style="max-width:400px">
+        <option value="">— Select a project —</option>
       </select>
     </div>
     <div id="byProjectList">
-      <div class="admin-loading">Loading…</div>
+      <div class="proj-report-prompt">👆 Select a project above to see the materials summary.</div>
     </div>
   </section>
 

@@ -470,68 +470,117 @@ async function deleteDelivery(id) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-//  BY PROJECT TAB
+//  BY PROJECT TAB — aggregate summary report
 // ═════════════════════════════════════════════════════════════════════════════
 async function loadByProject() {
   const wrap      = document.getElementById('byProjectList');
   const filterSel = document.getElementById('byProjectFilter');
   if (!wrap) return;
 
+  // Populate project dropdown on first call
+  if (filterSel && filterSel.options.length <= 1) {
+    const { data: projects } = await sbClient
+      .from('projects').select('id, name').order('name');
+    if (projects?.length) {
+      filterSel.innerHTML = '<option value="">— Select a project —</option>' +
+        projects.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+    }
+  }
+
+  const projectId = filterSel?.value;
+  if (!projectId) {
+    wrap.innerHTML = '<div class="proj-report-prompt">👆 Select a project above to see the materials summary.</div>';
+    return;
+  }
+
   wrap.innerHTML = '<div class="admin-loading">Loading…</div>';
 
   const { data: reqs, error } = await sbClient
     .from('delivery_requests')
-    .select('id, status, needed_by, needed_by_time, requested_at, items, notes, projects(name), profiles(full_name)')
-    .order('requested_at', { ascending: false });
+    .select('items, status')
+    .eq('project_id', projectId);
 
-  if (error) { wrap.innerHTML = '<div class="admin-empty">Error loading requests.</div>'; return; }
-  if (!reqs?.length) { wrap.innerHTML = '<div class="admin-empty">No delivery requests yet.</div>'; return; }
+  if (error) { wrap.innerHTML = '<div class="admin-empty">Error loading data.</div>'; return; }
+  if (!reqs?.length) { wrap.innerHTML = '<div class="admin-empty">No delivery requests for this project yet.</div>'; return; }
 
-  // Populate project filter dropdown (once)
-  if (filterSel && filterSel.options.length <= 1) {
-    const projectNames = [...new Set(reqs.map(r => r.projects?.name).filter(Boolean))].sort();
-    filterSel.innerHTML = '<option value="">All projects</option>' +
-      projectNames.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
-  }
+  // ── Aggregate totals across all requests ──────────────────────────────────
+  const blockTypes = {
+    standards_2h: 'Standards 2H', bondbeams: 'Bondbeams',
+    halves: 'Halves', multiblock: 'Multiblock', squints: 'Squints',
+    block_lock: 'Block Lock Bundle', wall_mesh: 'Wall Mesh'
+  };
+  const sizes = ['20cm', '25cm', '30cm'];
+  const totals = { '20cm': {}, '25cm': {}, '30cm': {}, mortar_tek: 0, blockfill: 0 };
+  const otherTexts = [];
+  const statusCounts = { requested: 0, on_schedule: 0, delivered: 0 };
 
-  const filterVal = filterSel?.value || '';
-  const filtered  = filterVal ? reqs.filter(r => r.projects?.name === filterVal) : reqs;
-
-  if (!filtered.length) { wrap.innerHTML = '<div class="admin-empty">No requests for this project.</div>'; return; }
-
-  // Group by project
-  const groups = {};
-  filtered.forEach(r => {
-    const pName = r.projects?.name || 'Unknown Project';
-    if (!groups[pName]) groups[pName] = [];
-    groups[pName].push(r);
+  reqs.forEach(r => {
+    statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
+    const items = r.items;
+    if (!items) return;
+    if (items.other_materials) { otherTexts.push(items.other_materials); return; }
+    sizes.forEach(size => {
+      if (!items[size]) return;
+      Object.entries(items[size]).forEach(([type, qty]) => {
+        if (qty > 0) totals[size][type] = (totals[size][type] || 0) + qty;
+      });
+    });
+    if (items.mortar_tek > 0) totals.mortar_tek += items.mortar_tek;
+    if (items.blockfill  > 0) totals.blockfill  += items.blockfill;
   });
 
-  const statusColors = { requested: '#f59e0b', on_schedule: '#3b82f6', delivered: '#22c55e' };
-  const statusLabels = { requested: '📋 Requested', on_schedule: '🚛 On Schedule', delivered: '✅ Delivered' };
+  // ── Status summary line ───────────────────────────────────────────────────
+  const statusParts = [
+    statusCounts.delivered   ? `✅ ${statusCounts.delivered} delivered`    : '',
+    statusCounts.on_schedule ? `🚛 ${statusCounts.on_schedule} in transit` : '',
+    statusCounts.requested   ? `📋 ${statusCounts.requested} pending`      : ''
+  ].filter(Boolean).join(' · ');
 
-  wrap.innerHTML = Object.entries(groups).map(([projName, rows]) => `
-    <div class="by-project-group">
-      <div class="by-project-title">${esc(projName)} <span class="by-project-count">${rows.length} request${rows.length !== 1 ? 's' : ''}</span></div>
-      ${rows.map(r => {
-        const color   = statusColors[r.status] || 'var(--text-muted)';
-        const status  = statusLabels[r.status]  || r.status;
-        const neededBy = r.needed_by ? `Needed by <strong>${formatDate(r.needed_by)}</strong>${r.needed_by_time ? ' at <strong>' + esc(r.needed_by_time) + '</strong>' : ''}` : '';
-        const items   = formatDeliveryItems(r.items);
-        return `
-          <div class="by-project-row">
-            <div class="by-project-row-meta">
-              <span class="by-project-foreman">${esc(r.profiles?.full_name || 'Unknown')}</span>
-              <span class="by-project-date">${formatDate(r.requested_at)}</span>
-              <span class="delivery-status-pill" style="background:${color}20;color:${color}">${status}</span>
-            </div>
-            ${neededBy ? `<div class="by-project-needed">${neededBy}</div>` : ''}
-            <div class="delivery-item-list">${items || '<em style="color:var(--text-muted);font-size:13px">No items specified</em>'}</div>
-            ${r.notes ? `<div class="delivery-card-notes">📝 ${esc(r.notes)}</div>` : ''}
-          </div>`;
-      }).join('')}
-    </div>
-  `).join('');
+  // ── Render block sections ─────────────────────────────────────────────────
+  const renderSize = size => {
+    const entries = Object.entries(totals[size]).filter(([, v]) => v > 0);
+    if (!entries.length) return '';
+    return `
+      <div class="proj-report-section">
+        <div class="proj-report-section-title">🧱 ${size} Blocks</div>
+        ${entries.map(([type, qty]) => `
+          <div class="proj-report-row">
+            <span>${blockTypes[type] || type}</span>
+            <strong>${qty} pallets</strong>
+          </div>`).join('')}
+      </div>`;
+  };
+
+  const hasMaterials = totals.mortar_tek > 0 || totals.blockfill > 0;
+  const materialsSection = hasMaterials ? `
+    <div class="proj-report-section">
+      <div class="proj-report-section-title">🪣 Materials</div>
+      ${totals.mortar_tek > 0 ? `<div class="proj-report-row"><span>Mortar Tek</span><strong>${totals.mortar_tek} pallets</strong></div>` : ''}
+      ${totals.blockfill  > 0 ? `<div class="proj-report-row"><span>Blockfill</span><strong>${totals.blockfill} pallets</strong></div>` : ''}
+    </div>` : '';
+
+  const otherSection = otherTexts.length ? `
+    <div class="proj-report-section">
+      <div class="proj-report-section-title">📋 Other Material Requests</div>
+      ${otherTexts.map((t, i) => `<div class="proj-report-other">${i + 1}. ${esc(t)}</div>`).join('')}
+    </div>` : '';
+
+  const hasAny = sizes.some(s => Object.values(totals[s]).some(v => v > 0)) || hasMaterials || otherTexts.length;
+  const projName = filterSel.options[filterSel.selectedIndex]?.text || '';
+
+  wrap.innerHTML = `
+    <div class="proj-report-card">
+      <div class="proj-report-header">
+        <div class="proj-report-title">${esc(projName)}</div>
+        <div class="proj-report-meta">${reqs.length} request${reqs.length !== 1 ? 's' : ''} total · ${statusParts}</div>
+      </div>
+      <div class="proj-report-body">
+        ${hasAny
+          ? renderSize('20cm') + renderSize('25cm') + renderSize('30cm') + materialsSection + otherSection
+          : '<div class="admin-empty" style="padding:20px 0">No items specified in these requests.</div>'
+        }
+      </div>
+    </div>`;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
