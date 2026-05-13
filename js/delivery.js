@@ -208,15 +208,19 @@ async function submitDeliveryRequest() {
           if (its.blockfill  > 0) itemsSummary += `Blockfill: ${its.blockfill} pallets\n`;
         }
 
-        await emailjs.init(window.EMAILJS_PUBLIC_KEY);
-        await emailjs.send(window.EMAILJS_SERVICE_ID, window.EMAILJS_TEMPLATE_ID, {
-          project:      projName,
-          foreman:      foremanName,
-          type:         typeLabel,
-          needed_by:    neededByStr,
-          items:        itemsSummary.trim() || 'No items specified',
-          notes:        notes || '—'
-        });
+        await emailjs.send(
+          window.EMAILJS_SERVICE_ID,
+          window.EMAILJS_TEMPLATE_ID,
+          {
+            project:   projName,
+            foreman:   foremanName,
+            type:      typeLabel,
+            needed_by: neededByStr,
+            items:     itemsSummary.trim() || 'No items specified',
+            notes:     notes || '—'
+          },
+          { publicKey: window.EMAILJS_PUBLIC_KEY }
+        );
       }
     } catch (err) { console.warn('EmailJS notification failed:', err); }
 
