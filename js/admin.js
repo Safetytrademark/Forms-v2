@@ -353,6 +353,21 @@ async function deleteDocument(docId, filePath) {
 // ═════════════════════════════════════════════════════════════════════════════
 //  DELIVERIES TAB
 // ═════════════════════════════════════════════════════════════════════════════
+
+// Project code → site abbreviation (shared with equipment.js logic)
+const PROJ_TO_SITE = {
+  '19TM019': 'CENTRA',  '23TM001': 'DRAKE',   '23TM007': 'WLAND',
+  '23TM009': 'ALBERNI', '24TM002': 'B-5/6',   '24TM010': 'COLUMBIA',
+  '25TM001': 'B-7',     '25TM004': 'IPL33',   '25TM006': 'ARBUTUS',
+  '25TM007': 'REIGN',   '25TM009': 'B-P3',    '25TM010': 'FHALL',
+  '25TM011': 'FRASER'
+};
+
+function projNameToAbbr(name) {
+  const code = (name || '').trim().split(/[\s-]+/)[0].toUpperCase();
+  return PROJ_TO_SITE[code] || code || '—';
+}
+
 async function loadDeliveries() {
   const pendingWrap = document.getElementById('deliveriesPending');
   const historyWrap = document.getElementById('deliveriesHistory');
@@ -360,7 +375,7 @@ async function loadDeliveries() {
 
   const { data: reqs, error } = await sbClient
     .from('delivery_requests')
-    .select('*, projects(name), profiles(full_name)')
+    .select('*, projects(name), profiles(full_name), po_number')
     .order('requested_at', { ascending: false });
 
   if (error) {
@@ -393,6 +408,8 @@ function renderDeliveryCard(req, compact = false) {
   };
   const color = statusColors[req.status] || 'var(--text-muted)';
 
+  const siteAbbr  = projNameToAbbr(req.projects?.name);
+  const poLabel   = req.po_number ? ` · PO: <strong>${esc(req.po_number)}</strong>` : '';
   const itemsList = formatDeliveryItems(req.items);
   const timeStr   = req.needed_by_time ? ` at <strong>${esc(req.needed_by_time)}</strong>` : '';
   const neededBy  = req.needed_by
@@ -413,7 +430,7 @@ function renderDeliveryCard(req, compact = false) {
     <div class="delivery-card" style="border-left-color:${color}">
       <div class="delivery-card-header">
         <div>
-          <div class="admin-cell-name">${esc(req.projects?.name || 'Unknown project')}</div>
+          <div class="admin-cell-name">${siteAbbr}${poLabel}</div>
           <div class="admin-cell-meta">${esc(req.profiles?.full_name || 'Unknown foreman')} · ${formatDate(req.requested_at)}${neededBy ? ' · ' + neededBy : ''}</div>
         </div>
         <span class="delivery-status-pill" style="background:${color}20;color:${color}">${statusLabels[req.status] || req.status}</span>
