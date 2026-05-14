@@ -684,33 +684,44 @@ const EQ_SITES = ['CENTRA','DRAKE','WLAND','ALBERNI','B-5/6','COLUMBIA','B-7','I
 let _eqTransferItem = null;
 
 // ── Shared category block renderer ────────────────────────────────────────────
+// Single-site → qty column (clickable to edit)
+// All-sites   → compact badges showing only sites with stock
 function _buildEqCatBlock(cat, catItems, activeSites) {
+  const single = activeSites.length === 1;
+  const site   = single ? activeSites[0] : null;
+
+  const rows = catItems.map(item => {
+    const locs = {};
+    (item.equipment_locations || []).forEach(l => { locs[l.site_name] = l.quantity; });
+    const transferBtn = `<button class="eq-transfer-btn" onclick='openTransferModal(${JSON.stringify({id:item.id,name:item.name,category:item.category,section:item.section||'TM Equipment'})})'>⇄</button>`;
+
+    if (single) {
+      const qty = locs[site] || 0;
+      return `
+        <div class="eq-list-row ${qty === 0 ? 'eq-row-empty' : ''}">
+          <div class="eq-list-name">${esc(item.name)}</div>
+          <div class="eq-list-qty eq-qty" data-eq="${esc(item.id)}" data-site="${esc(site)}" data-qty="${qty}" onclick="editQty(this)">
+            ${qty > 0 ? qty : '<span class="eq-zero">—</span>'}
+          </div>
+          ${transferBtn}
+        </div>`;
+    } else {
+      const nonZero = activeSites.filter(s => (locs[s] || 0) > 0);
+      return `
+        <div class="eq-list-row ${nonZero.length === 0 ? 'eq-row-empty' : ''}">
+          <div class="eq-list-name">${esc(item.name)}</div>
+          <div class="eq-list-chips">
+            ${nonZero.map(s => `<span class="eq-site-chip">${esc(s)} ×${locs[s]}</span>`).join('')}
+          </div>
+          ${transferBtn}
+        </div>`;
+    }
+  }).join('');
+
   return `
     <div class="eq-category-block">
       <div class="eq-category-header">${cat}</div>
-      <div class="eq-table">
-        <div class="eq-table-head">
-          <div class="eq-col-item">Item</div>
-          ${activeSites.map(s => `<div class="eq-col-site">${s}</div>`).join('')}
-          <div class="eq-col-action"></div>
-        </div>
-        ${catItems.map(item => {
-          const locs = {};
-          (item.equipment_locations || []).forEach(l => { locs[l.site_name] = l.quantity; });
-          const hasQty = activeSites.some(s => (locs[s] || 0) > 0);
-          return `
-          <div class="eq-table-row ${hasQty ? '' : 'eq-row-empty'}">
-            <div class="eq-col-item">${esc(item.name)}</div>
-            ${activeSites.map(s => {
-              const q = locs[s] || 0;
-              return `<div class="eq-col-site eq-qty" data-eq="${esc(item.id)}" data-site="${esc(s)}" data-qty="${q}" onclick="editQty(this)">${q > 0 ? q : '<span class="eq-zero">—</span>'}</div>`;
-            }).join('')}
-            <div class="eq-col-action">
-              <button class="eq-transfer-btn" onclick='openTransferModal(${JSON.stringify({id:item.id,name:item.name,category:item.category,section:item.section||'TM Equipment'})})'>⇄</button>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
+      <div class="eq-list">${rows}</div>
     </div>`;
 }
 

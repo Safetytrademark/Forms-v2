@@ -701,44 +701,68 @@ body { min-height: 100dvh; }
   border-radius: 6px 6px 0 0;
 }
 
-.eq-table { border: 1px solid var(--border); border-top: none; border-radius: 0 0 6px 6px; overflow: hidden; }
+/* ── Equipment list layout (works for single-site and all-sites) ────────── */
+.eq-list {
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  overflow: hidden;
+}
 
-.eq-table-head, .eq-table-row {
-  display: grid;
-  grid-template-columns: 1fr repeat(var(--site-cols, 8), 60px) 90px;
+.eq-list-row {
+  display: flex;
   align-items: center;
-  gap: 0;
-}
-
-.eq-table-head {
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--border);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.eq-table-row {
+  gap: 10px;
+  padding: 9px 12px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   transition: background 0.12s;
 }
-.eq-table-row:last-child { border-bottom: none; }
-.eq-table-row:hover { background: var(--surface-2); }
-.eq-row-empty { opacity: 0.45; }
+.eq-list-row:last-child { border-bottom: none; }
+.eq-list-row:hover { background: var(--surface-2); }
+.eq-row-empty { opacity: 0.4; }
 
-.eq-col-item  { padding: 8px 12px; font-size: 13px; color: var(--text); }
-.eq-col-site  { padding: 8px 4px; font-size: 12px; text-align: center; color: var(--text-muted); }
-.eq-col-action{ padding: 6px 8px; text-align: right; }
-
-.eq-qty {
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.12s;
+.eq-list-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  min-width: 0;
 }
-.eq-qty:hover { background: rgba(192,39,45,0.12); color: var(--accent); }
+
+/* Single-site: clickable qty */
+.eq-list-qty {
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 36px;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.12s;
+  color: var(--text);
+}
+.eq-list-qty:hover { background: rgba(192,39,45,0.12); color: var(--accent); }
+
+/* All-sites: site badges */
+.eq-list-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: flex-end;
+  flex: 2;
+}
+
+.eq-site-chip {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(245,158,11,0.1);
+  color: var(--accent, #f59e0b);
+  border: 1px solid rgba(245,158,11,0.25);
+  white-space: nowrap;
+}
+
 .eq-zero { color: var(--text-dim); font-size: 11px; }
 
 .eq-transfer-btn {
