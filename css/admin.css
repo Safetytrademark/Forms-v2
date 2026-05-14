@@ -800,19 +800,108 @@ body { min-height: 100dvh; }
 
 .eq-zero { color: var(--text-dim); font-size: 11px; }
 
+/* Row action buttons */
+.eq-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.eq-manage-btn,
 .eq-transfer-btn {
   font-size: 11px;
   font-weight: 600;
-  padding: 4px 8px;
-  background: transparent;
-  border: 1px solid var(--border-strong);
-  border-radius: 5px;
-  color: var(--text-muted);
+  padding: 5px 10px;
+  border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.12s, border-color 0.12s;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  border: 1px solid var(--border-strong);
+}
+.eq-manage-btn {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.eq-manage-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.eq-transfer-btn {
+  background: transparent;
+  color: var(--text-muted);
 }
 .eq-transfer-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Delete danger button */
+.admin-btn-danger {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid rgba(220,50,50,0.4);
+  color: #e05555;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.admin-btn-danger:hover { background: rgba(220,50,50,0.12); }
+
+/* ── Manage Item Modal qty grid ─────────────────────────────────────────── */
+.iqm-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.iqm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.iqm-row:last-child { border-bottom: none; }
+.iqm-row:nth-child(even) { background: var(--surface-2); }
+
+.iqm-site {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  min-width: 70px;
+}
+
+.iqm-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iqm-step {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-flat);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.iqm-step:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.iqm-qty {
+  width: 52px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 5px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-0);
+  color: var(--text);
+}
 
 .eq-modal-field { margin-bottom: 14px; }
 

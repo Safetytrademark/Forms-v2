@@ -682,10 +682,12 @@ async function loadSubmissions() {
 // ═════════════════════════════════════════════════════════════════════════════
 const EQ_SITES = ['CENTRA','DRAKE','WLAND','ALBERNI','B-5/6','COLUMBIA','B-7','IPL33','ARBUTUS','REIGN','B-P3','FHALL','FRASER','YARD'];
 let _eqTransferItem = null;
+let _eqManageItem   = null;
+const _eqItemsCache = {};   // id → full item object (with equipment_locations)
 
 // ── Shared category block renderer ────────────────────────────────────────────
-// Single-site → qty column (clickable to edit)
-// All-sites   → compact badges showing only sites with stock
+// Single-site → qty display + Manage + Transfer buttons
+// Multi-site  → site badges + Manage + Transfer buttons
 function _buildEqCatBlock(cat, catItems, activeSites) {
   const single = activeSites.length === 1;
   const site   = single ? activeSites[0] : null;
@@ -693,17 +695,20 @@ function _buildEqCatBlock(cat, catItems, activeSites) {
   const rows = catItems.map(item => {
     const locs = {};
     (item.equipment_locations || []).forEach(l => { locs[l.site_name] = l.quantity; });
-    const transferBtn = `<button class="eq-transfer-btn" onclick='openTransferModal(${JSON.stringify({id:item.id,name:item.name,category:item.category,section:item.section||'TM Equipment'})})'>⇄</button>`;
+
+    const actions = `
+      <div class="eq-row-actions">
+        <button class="eq-manage-btn" onclick="openManageModal('${esc(item.id)}')">✏ Edit</button>
+        <button class="eq-transfer-btn" onclick='openTransferModal(${JSON.stringify({id:item.id,name:item.name,category:item.category,section:item.section||'TM Equipment'})})'>⇄ Move</button>
+      </div>`;
 
     if (single) {
       const qty = locs[site] || 0;
       return `
         <div class="eq-list-row ${qty === 0 ? 'eq-row-empty' : ''}">
           <div class="eq-list-name">${esc(item.name)}</div>
-          <div class="eq-list-qty eq-qty" data-eq="${esc(item.id)}" data-site="${esc(site)}" data-qty="${qty}" onclick="editQty(this)">
-            ${qty > 0 ? qty : '<span class="eq-zero">—</span>'}
-          </div>
-          ${transferBtn}
+          <div class="eq-list-qty">${qty > 0 ? `<strong>${qty}</strong>` : '<span class="eq-zero">—</span>'}</div>
+          ${actions}
         </div>`;
     } else {
       const nonZero = activeSites.filter(s => (locs[s] || 0) > 0);
@@ -711,9 +716,9 @@ function _buildEqCatBlock(cat, catItems, activeSites) {
         <div class="eq-list-row ${nonZero.length === 0 ? 'eq-row-empty' : ''}">
           <div class="eq-list-name">${esc(item.name)}</div>
           <div class="eq-list-chips">
-            ${nonZero.map(s => `<span class="eq-site-chip">${esc(s)} ×${locs[s]}</span>`).join('')}
+            ${nonZero.map(s => `<span class="eq-site-chip">${esc(s)} ×${locs[s]}</span>`).join('') || ''}
           </div>
-          ${transferBtn}
+          ${actions}
         </div>`;
     }
   }).join('');
@@ -787,6 +792,8 @@ async function _loadEquipSection(section, siteFilterId, listId, histId) {
   if (error || !items?.length) {
     listWrap.innerHTML = '<div class="admin-empty">No items found.</div>';
   } else {
+    // Cache items so the Manage modal can look them up by ID
+    items.forEach(item => { _eqItemsCache[item.id] = item; });
     const activeSites = getActiveSites(siteFilterId);
     const grouped = {};
     items.forEach(item => {
@@ -808,25 +815,86 @@ async function loadRentalEquipment() {
   await _loadEquipSection('Rental', 'rentalSiteFilter', 'rentalEquipList', null);
 }
 
-async function editQty(el) {
-  const eqId   = el.dataset.eq;
-  const site   = el.dataset.site;
-  const curQty = parseInt(el.dataset.qty) || 0;
-  const newQty = prompt(`Update quantity for "${site}":`, curQty);
-  if (newQty === null) return;
-  const qty = parseInt(newQty);
-  if (isNaN(qty) || qty < 0) { alert('Invalid quantity.'); return; }
+// ── Manage Item Modal ─────────────────────────────────────────────────────────
+function _siteInputId(site) { return 'iqm-' + site.replace(/\//g, '-'); }
 
-  const { error } = await sbClient.from('equipment_locations').upsert(
-    { equipment_id: eqId, site_name: site, quantity: qty, updated_at: new Date().toISOString() },
-    { onConflict: 'equipment_id,site_name' }
-  );
-  if (error) { alert('Error saving: ' + error.message); return; }
-  el.dataset.qty = qty;
-  el.innerHTML = qty > 0 ? qty : '<span class="eq-zero">—</span>';
-  el.parentElement.classList.toggle('eq-row-empty', !Array.from(
-    el.parentElement.querySelectorAll('[data-qty]')
-  ).some(c => parseInt(c.dataset.qty) > 0));
+function openManageModal(itemId) {
+  const item = _eqItemsCache[itemId];
+  if (!item) return;
+  _eqManageItem = item;
+
+  document.getElementById('manageModalName').textContent = item.name + ' · ' + item.category;
+  document.getElementById('manageModalError').textContent = '';
+
+  const locs = {};
+  (item.equipment_locations || []).forEach(l => { locs[l.site_name] = l.quantity; });
+
+  document.getElementById('manageModalSites').innerHTML = EQ_SITES.map(site => {
+    const qty = locs[site] || 0;
+    const sid = _siteInputId(site);
+    return `
+      <div class="iqm-row">
+        <span class="iqm-site">${esc(site)}</span>
+        <div class="iqm-controls">
+          <button type="button" class="iqm-step" onclick="iqmStep('${esc(site)}',-1)">−</button>
+          <input class="iqm-qty" id="${sid}" type="number" min="0" value="${qty}">
+          <button type="button" class="iqm-step" onclick="iqmStep('${esc(site)}',1)">+</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('manageModal').style.display = 'flex';
+}
+
+function closeManageModal(e) {
+  if (!e || e.target === document.getElementById('manageModal'))
+    document.getElementById('manageModal').style.display = 'none';
+}
+
+function iqmStep(site, delta) {
+  const input = document.getElementById(_siteInputId(site));
+  if (!input) return;
+  input.value = Math.max(0, (parseInt(input.value) || 0) + delta);
+}
+
+async function saveManageQtys() {
+  const item = _eqManageItem;
+  if (!item) return;
+  const btn   = document.getElementById('manageModalSaveBtn');
+  const errEl = document.getElementById('manageModalError');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const upserts = EQ_SITES.map(site => ({
+    equipment_id: item.id,
+    site_name:    site,
+    quantity:     Math.max(0, parseInt(document.getElementById(_siteInputId(site))?.value) || 0),
+    updated_at:   new Date().toISOString()
+  }));
+
+  const { error } = await sbClient.from('equipment_locations')
+    .upsert(upserts, { onConflict: 'equipment_id,site_name' });
+
+  btn.disabled = false; btn.textContent = 'Save';
+  if (error) { errEl.textContent = 'Error: ' + error.message; return; }
+
+  document.getElementById('manageModal').style.display = 'none';
+  if (item.section === 'TM Equipment') loadTMEquipment();
+  else loadRentalEquipment();
+}
+
+async function deleteEquipmentItem() {
+  const item = _eqManageItem;
+  if (!item) return;
+  if (!confirm(`Permanently delete "${item.name}"?\n\nThis removes all site quantities and cannot be undone.`)) return;
+
+  await sbClient.from('equipment_locations').delete().eq('equipment_id', item.id);
+  const { error } = await sbClient.from('equipment').delete().eq('id', item.id);
+  if (error) { document.getElementById('manageModalError').textContent = 'Delete failed: ' + error.message; return; }
+
+  delete _eqItemsCache[item.id];
+  document.getElementById('manageModal').style.display = 'none';
+  if (item.section === 'TM Equipment') loadTMEquipment();
+  else loadRentalEquipment();
 }
 
 function openTransferModal(item) {

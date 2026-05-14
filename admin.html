@@ -339,6 +339,26 @@
   </div>
 </div>
 
+<!-- ── Manage Item Modal ──────────────────────────────────────────────────── -->
+<div id="manageModal" class="admin-modal-overlay" style="display:none" onclick="closeManageModal(event)">
+  <div class="admin-modal" style="max-width:400px">
+    <h3 class="admin-modal-title">Manage Item</h3>
+    <div class="admin-modal-body" style="padding-bottom:0">
+      <p id="manageModalName" style="font-weight:700;font-size:15px;margin-bottom:4px;color:var(--text)"></p>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Set quantities per site. Use +/− or type directly.</p>
+      <div id="manageModalSites" class="iqm-grid"></div>
+      <p id="manageModalError" style="color:var(--error);font-size:13px;min-height:18px;margin-top:8px"></p>
+    </div>
+    <div class="admin-modal-footer" style="justify-content:space-between">
+      <button class="admin-btn-danger" onclick="deleteEquipmentItem()">🗑 Delete Item</button>
+      <div style="display:flex;gap:8px">
+        <button class="admin-btn-ghost" onclick="closeManageModal()">Cancel</button>
+        <button class="admin-btn-primary" id="manageModalSaveBtn" onclick="saveManageQtys()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── Add Equipment Modal ────────────────────────────────────────────────── -->
 <div id="addEquipmentModal" class="admin-modal-overlay" style="display:none" onclick="closeAddEquipmentModal(event)">
   <div class="admin-modal" style="max-width:380px">
