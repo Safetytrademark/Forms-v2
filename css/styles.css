@@ -2297,57 +2297,54 @@ body::after {
 }
 .deliv-tab:hover:not(.active) { color: var(--text); }
 
-/* ── Compact list-style block entry ──────────────────────────────────────── */
-.deliv-list-section {
-  font-size: 10.5px;
+/* ── Delivery section card ────────────────────────────────────────────────── */
+.dsc {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-flat);
+}
+.dsc-head {
+  background: var(--surface-2, #1c1c22);
+  padding: 8px 14px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  padding: 12px 2px 4px;
+  letter-spacing: 0.04em;
+  color: var(--text);
   border-bottom: 1px solid var(--border);
-  margin-bottom: 0;
 }
-.deliv-list-group {
-  margin-bottom: 4px;
-}
-.deliv-list-row {
+.dsc-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 6px 2px;
-  border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,0.05));
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
 }
-.deliv-list-row:last-child { border-bottom: none; }
-.deliv-list-label {
+.dsc-row:last-child { border-bottom: none; }
+.dsc-row > span {
   font-size: 13px;
   color: var(--text);
   flex: 1;
-  min-width: 0;
 }
-.deliv-list-qty {
-  width: 68px;
+.dsc-qty {
+  width: 72px;
   flex-shrink: 0;
   text-align: center;
-  padding: 5px 8px;
+  padding: 5px 6px;
   font-size: 14px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  background: var(--surface-2, #1c1c22);
+  background: var(--bg-0);
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
+  border-radius: 6px;
   color: var(--text);
   font-family: var(--font);
-  appearance: none;
   -moz-appearance: textfield;
 }
-.deliv-list-qty::-webkit-inner-spin-button,
-.deliv-list-qty::-webkit-outer-spin-button { opacity: 0.4; }
-.deliv-list-qty:focus {
-  outline: none;
-  border-color: var(--accent, #f59e0b);
-}
+.dsc-qty::-webkit-inner-spin-button,
+.dsc-qty::-webkit-outer-spin-button { opacity: 0.5; }
+.dsc-qty:focus { outline: none; border-color: var(--accent, #f59e0b); }
 
 .delivery-error {
   color: var(--error);
