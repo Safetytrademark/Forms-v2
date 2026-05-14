@@ -1842,13 +1842,11 @@ async function generateInspectionPDF(formData, photos) {
   doc.text(config.notice, margin, y + 3);
   y += 8;
 
-  // â”€â”€ Legend â”€â”€
-  doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(...DGRAY);
-  doc.text('âœ“ = OK', margin, y + 3);
-  doc.setTextColor(...REDCL);
-  doc.text('âœ— = Correction needed', margin + 16, y + 3);
-  doc.setTextColor(...MGRAY);
-  doc.text('Empty = Not inspected', margin + 60, y + 3);
+  // Legend
+  doc.setFontSize(7); doc.setFont('helvetica','bold');
+  doc.setFillColor(...GREEN);  doc.circle(margin + 2,    y + 2.5, 1.5, 'F'); doc.setTextColor(...DGRAY); doc.text('= OK',                 margin + 5,    y + 3.5);
+  doc.setFillColor(...REDCL);  doc.circle(margin + 22,   y + 2.5, 1.5, 'F'); doc.setTextColor(...REDCL); doc.text('= Correction needed', margin + 25,   y + 3.5);
+  doc.setFillColor(200,200,200); doc.circle(margin + 72, y + 2.5, 1.5, 'FD'); doc.setTextColor(...MGRAY); doc.text('= Not inspected',    margin + 75,   y + 3.5);
   y += 8;
 
   // Column layout: item text | 6 day columns
@@ -2116,11 +2114,11 @@ async function generateDailyInspectionPDF(formData, photos) {
   doc.text(config.notice, margin, y + 3);
   y += 8;
 
-  // â”€â”€ Legend â”€â”€
+  // Legend
   doc.setFontSize(7.5); doc.setFont('helvetica','bold');
-  doc.setTextColor(...GREEN);  doc.text('âœ“ = OK', margin, y + 3);
-  doc.setTextColor(...REDCL);  doc.text('âœ— = Correction needed', margin + 18, y + 3);
-  doc.setTextColor(...MGRAY);  doc.text('â—‹ = Not inspected', margin + 70, y + 3);
+  doc.setFillColor(...GREEN);    doc.circle(margin + 2,  y + 2.5, 1.5, 'F');  doc.setTextColor(...DGRAY); doc.text('= OK',                 margin + 5,  y + 3.5);
+  doc.setFillColor(...REDCL);    doc.circle(margin + 22, y + 2.5, 1.5, 'F');  doc.setTextColor(...REDCL); doc.text('= Correction needed', margin + 25, y + 3.5);
+  doc.setFillColor(200,200,200); doc.circle(margin + 75, y + 2.5, 1.5, 'FD'); doc.setTextColor(...MGRAY); doc.text('= Not inspected',    margin + 78, y + 3.5);
   y += 8;
 
   // Single check column width

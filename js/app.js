@@ -1916,6 +1916,28 @@ function triggerDownload(buffer, filename) {
   }
 }
 
+// ── Signature compression (PNG → small JPEG before PDF) ──────────────────────
+function compressSig(dataUrl, maxW = 380, maxH = 100, quality = 0.55) {
+  return new Promise(resolve => {
+    if (!dataUrl || !dataUrl.startsWith('data:image')) { resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = () => {
+      const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
+      const w = Math.max(1, Math.round(img.width  * ratio));
+      const h = Math.max(1, Math.round(img.height * ratio));
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(cv.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 // ── Draft Save / Load (Weekly Timesheet & Production Report) ─────────────────
 const DRAFTABLE_FORMS = ['Weekly Timesheet', 'Production Report'];
 
@@ -1991,6 +2013,19 @@ async function handleSubmit() {
     // Capture signature from pad at submit time (in case endStroke didn't fire)
     if (window._signaturePad && !window._signaturePad.isEmpty()) {
       state.signature = window._signaturePad.toDataURL('image/png');
+    }
+
+    // Compress main signature PNG → small JPEG to reduce PDF size
+    if (state.signature) {
+      state.signature = await compressSig(state.signature);
+    }
+    // Compress crew sign-in member signatures too
+    if (Array.isArray(state.fields['crew-signin'])) {
+      state.fields['crew-signin'] = await Promise.all(
+        state.fields['crew-signin'].map(async m =>
+          m.sig ? { ...m, sig: await compressSig(m.sig) } : m
+        )
+      );
     }
 
     const pdfBuffer   = await generatePDF(state, state.photos);
