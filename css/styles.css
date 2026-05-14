@@ -1538,28 +1538,40 @@ body::after {
   margin-bottom: 4px;
 }
 
+/* Two-line card layout — works on any screen width */
 .feq-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
   border-bottom: 1px solid var(--border);
 }
 .feq-row:last-child { border-bottom: none; }
+
+.feq-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
 
 .feq-name {
   font-size: 14px;
   color: var(--text);
   font-weight: 500;
-  min-width: 160px;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .feq-sites {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  flex: 1;
+  width: 100%;
 }
 
 .feq-site-badge {
@@ -1583,8 +1595,8 @@ body::after {
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.12s, border-color 0.12s;
   flex-shrink: 0;
+  transition: color 0.12s, border-color 0.12s;
 }
 .feq-transfer-btn:hover { color: var(--accent); border-color: var(--accent); }
 

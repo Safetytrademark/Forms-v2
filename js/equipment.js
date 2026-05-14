@@ -62,13 +62,15 @@ async function loadForemanEquipment() {
       <div class="feq-cat-header">${cat}</div>
       ${catItems.map(item => `
         <div class="feq-row">
-          <div class="feq-name">${escEq(item.name)}</div>
+          <div class="feq-row-top">
+            <span class="feq-name">${escEq(item.name)}</span>
+            <button class="feq-transfer-btn" onclick='openFTransfer(${JSON.stringify({id:item.id,name:item.name,category:item.category,locs:item.locs})}, ${JSON.stringify(sitesToShow)})'>⇄ Transfer</button>
+          </div>
           <div class="feq-sites">
             ${sitesToShow.filter(s => (item.locs[s] || 0) > 0).map(s =>
               `<span class="feq-site-badge"><strong>${item.locs[s]}</strong> @ ${escEq(s)}</span>`
             ).join('')}
           </div>
-          <button class="feq-transfer-btn" onclick='openFTransfer(${JSON.stringify({id:item.id,name:item.name,category:item.category,locs:item.locs})}, ${JSON.stringify(sitesToShow)})'>⇄ Transfer</button>
         </div>`).join('')}
     </div>`).join('');
 }
