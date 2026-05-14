@@ -823,7 +823,7 @@ function openManageModal(itemId) {
   if (!item) return;
   _eqManageItem = item;
 
-  document.getElementById('manageModalName').textContent = item.name + ' · ' + item.category;
+  document.getElementById('manageModalName').value = item.name;
   document.getElementById('manageModalError').textContent = '';
 
   const locs = {};
@@ -860,10 +860,22 @@ function iqmStep(site, delta) {
 async function saveManageQtys() {
   const item = _eqManageItem;
   if (!item) return;
-  const btn   = document.getElementById('manageModalSaveBtn');
-  const errEl = document.getElementById('manageModalError');
+  const btn    = document.getElementById('manageModalSaveBtn');
+  const errEl  = document.getElementById('manageModalError');
+  const newName = document.getElementById('manageModalName').value.trim();
+  if (!newName) { errEl.textContent = 'Item name cannot be empty.'; return; }
+
   btn.disabled = true; btn.textContent = 'Saving…';
 
+  // Update item name if changed
+  if (newName !== item.name) {
+    const { error: nameErr } = await sbClient.from('equipment')
+      .update({ name: newName }).eq('id', item.id);
+    if (nameErr) { errEl.textContent = 'Error: ' + nameErr.message; btn.disabled = false; btn.textContent = 'Save'; return; }
+    _eqItemsCache[item.id].name = newName;
+  }
+
+  // Upsert all site quantities
   const upserts = EQ_SITES.map(site => ({
     equipment_id: item.id,
     site_name:    site,
