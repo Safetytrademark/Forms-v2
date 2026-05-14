@@ -350,19 +350,13 @@
 
     <div class="delivery-modal-body">
 
-      <!-- Project + PO Number -->
+      <!-- Project + Date/Time -->
       <div class="field-group">
         <label class="field-label" for="delivProjectSelect">Project *</label>
         <select class="field-input field-select" id="delivProjectSelect">
           <option value="">Select project…</option>
         </select>
       </div>
-      <div class="field-group">
-        <label class="field-label" for="delivPoNumber">PO Number</label>
-        <input class="field-input" type="text" id="delivPoNumber" placeholder="e.g. PO-2025-001" autocomplete="off">
-      </div>
-
-      <!-- Date + Time on same row -->
       <div class="delivery-row-2col">
         <div class="field-group">
           <label class="field-label" for="delivNeededBy">Needed By</label>
@@ -384,53 +378,53 @@
       <!-- ── Block Delivery panel ──────────────────────────────────────────── -->
       <div id="delivPanelBlock">
 
-        <!-- 15cm -->
-        <div class="delivery-section-title">15cm Blocks</div>
-        <div class="delivery-block-grid-2col">
-          <div class="delivery-block-item"><label>Standards 2H</label>    <input class="field-input delivery-qty" type="number" min="0" id="b15_standards_2h" placeholder="0"></div>
-          <div class="delivery-block-item"><label>Bondbeams</label>        <input class="field-input delivery-qty" type="number" min="0" id="b15_bondbeams"    placeholder="0"></div>
-          <div class="delivery-block-item"><label>Halves</label>           <input class="field-input delivery-qty" type="number" min="0" id="b15_halves"       placeholder="0"></div>
-          <div class="delivery-block-item"><label>Block Lock Bundle</label><input class="field-input delivery-qty" type="number" min="0" id="b15_block_lock"   placeholder="0"></div>
-          <div class="delivery-block-item"><label>Wall Mesh</label>        <input class="field-input delivery-qty" type="number" min="0" id="b15_wall_mesh"    placeholder="0"></div>
+        <!-- 20cm — most common, FIRST -->
+        <div class="deliv-list-section">20cm Blocks</div>
+        <div class="deliv-list-group">
+          <div class="deliv-list-row"><span class="deliv-list-label">Standards 2H</span>    <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b20_standards_2h" placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Bondbeams</span>        <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b20_bondbeams"    placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Halves</span>           <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b20_halves"       placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Multiblock</span>       <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b20_multiblock"   placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Squints</span>          <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b20_squints"      placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Block Lock Bundle</span><input class="delivery-qty deliv-list-qty" type="number" min="0" id="b20_block_lock"   placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Wall Mesh</span>        <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b20_wall_mesh"    placeholder="0"></div>
         </div>
 
-        <!-- 20cm -->
-        <div class="delivery-section-title">20cm Blocks</div>
-        <div class="delivery-block-grid-2col">
-          <div class="delivery-block-item"><label>Standards 2H</label>    <input class="field-input delivery-qty" type="number" min="0" id="b20_standards_2h" placeholder="0"></div>
-          <div class="delivery-block-item"><label>Bondbeams</label>        <input class="field-input delivery-qty" type="number" min="0" id="b20_bondbeams"    placeholder="0"></div>
-          <div class="delivery-block-item"><label>Halves</label>           <input class="field-input delivery-qty" type="number" min="0" id="b20_halves"       placeholder="0"></div>
-          <div class="delivery-block-item"><label>Multiblock</label>       <input class="field-input delivery-qty" type="number" min="0" id="b20_multiblock"   placeholder="0"></div>
-          <div class="delivery-block-item"><label>Squints</label>          <input class="field-input delivery-qty" type="number" min="0" id="b20_squints"      placeholder="0"></div>
-          <div class="delivery-block-item"><label>Block Lock Bundle</label><input class="field-input delivery-qty" type="number" min="0" id="b20_block_lock"   placeholder="0"></div>
-          <div class="delivery-block-item"><label>Wall Mesh</label>        <input class="field-input delivery-qty" type="number" min="0" id="b20_wall_mesh"    placeholder="0"></div>
+        <!-- Materials — second most common -->
+        <div class="deliv-list-section">🪣 Materials</div>
+        <div class="deliv-list-group">
+          <div class="deliv-list-row"><span class="deliv-list-label">Mortar Tek</span><input class="delivery-qty deliv-list-qty" type="number" min="0" id="mat_mortar_tek" placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Blockfill</span> <input class="delivery-qty deliv-list-qty" type="number" min="0" id="mat_blockfill"  placeholder="0"></div>
+        </div>
+
+        <!-- 15cm -->
+        <div class="deliv-list-section">15cm Blocks</div>
+        <div class="deliv-list-group">
+          <div class="deliv-list-row"><span class="deliv-list-label">Standards 2H</span>    <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b15_standards_2h" placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Bondbeams</span>        <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b15_bondbeams"    placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Halves</span>           <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b15_halves"       placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Block Lock Bundle</span><input class="delivery-qty deliv-list-qty" type="number" min="0" id="b15_block_lock"   placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Wall Mesh</span>        <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b15_wall_mesh"    placeholder="0"></div>
         </div>
 
         <!-- 25cm -->
-        <div class="delivery-section-title">25cm Blocks</div>
-        <div class="delivery-block-grid-2col">
-          <div class="delivery-block-item"><label>Standards 2H</label>    <input class="field-input delivery-qty" type="number" min="0" id="b25_standards_2h" placeholder="0"></div>
-          <div class="delivery-block-item"><label>Bondbeams</label>        <input class="field-input delivery-qty" type="number" min="0" id="b25_bondbeams"    placeholder="0"></div>
-          <div class="delivery-block-item"><label>Halves</label>           <input class="field-input delivery-qty" type="number" min="0" id="b25_halves"       placeholder="0"></div>
-          <div class="delivery-block-item"><label>Block Lock Bundle</label><input class="field-input delivery-qty" type="number" min="0" id="b25_block_lock"   placeholder="0"></div>
-          <div class="delivery-block-item"><label>Wall Mesh</label>        <input class="field-input delivery-qty" type="number" min="0" id="b25_wall_mesh"    placeholder="0"></div>
+        <div class="deliv-list-section">25cm Blocks</div>
+        <div class="deliv-list-group">
+          <div class="deliv-list-row"><span class="deliv-list-label">Standards 2H</span>    <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b25_standards_2h" placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Bondbeams</span>        <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b25_bondbeams"    placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Halves</span>           <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b25_halves"       placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Block Lock Bundle</span><input class="delivery-qty deliv-list-qty" type="number" min="0" id="b25_block_lock"   placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Wall Mesh</span>        <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b25_wall_mesh"    placeholder="0"></div>
         </div>
 
         <!-- 30cm -->
-        <div class="delivery-section-title">30cm Blocks</div>
-        <div class="delivery-block-grid-2col">
-          <div class="delivery-block-item"><label>Standards 2H</label>    <input class="field-input delivery-qty" type="number" min="0" id="b30_standards_2h" placeholder="0"></div>
-          <div class="delivery-block-item"><label>Bondbeams</label>        <input class="field-input delivery-qty" type="number" min="0" id="b30_bondbeams"    placeholder="0"></div>
-          <div class="delivery-block-item"><label>Halves</label>           <input class="field-input delivery-qty" type="number" min="0" id="b30_halves"       placeholder="0"></div>
-          <div class="delivery-block-item"><label>Block Lock Bundle</label><input class="field-input delivery-qty" type="number" min="0" id="b30_block_lock"   placeholder="0"></div>
-          <div class="delivery-block-item"><label>Wall Mesh</label>        <input class="field-input delivery-qty" type="number" min="0" id="b30_wall_mesh"    placeholder="0"></div>
-        </div>
-
-        <!-- Materials -->
-        <div class="delivery-section-title">🪣 Materials</div>
-        <div class="delivery-block-grid-2col">
-          <div class="delivery-block-item"><label>Mortar Tek</label><input class="field-input delivery-qty" type="number" min="0" id="mat_mortar_tek" placeholder="0"></div>
-          <div class="delivery-block-item"><label>Blockfill</label> <input class="field-input delivery-qty" type="number" min="0" id="mat_blockfill"  placeholder="0"></div>
+        <div class="deliv-list-section">30cm Blocks</div>
+        <div class="deliv-list-group">
+          <div class="deliv-list-row"><span class="deliv-list-label">Standards 2H</span>    <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b30_standards_2h" placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Bondbeams</span>        <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b30_bondbeams"    placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Halves</span>           <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b30_halves"       placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Block Lock Bundle</span><input class="delivery-qty deliv-list-qty" type="number" min="0" id="b30_block_lock"   placeholder="0"></div>
+          <div class="deliv-list-row"><span class="deliv-list-label">Wall Mesh</span>        <input class="delivery-qty deliv-list-qty" type="number" min="0" id="b30_wall_mesh"    placeholder="0"></div>
         </div>
 
       </div><!-- /#delivPanelBlock -->
@@ -439,14 +433,14 @@
       <div id="delivPanelOther" style="display:none">
         <div class="field-group" style="margin-top:12px">
           <label class="field-label" for="delivOtherDesc">Describe what you need *</label>
-          <textarea class="field-input" id="delivOtherDesc" rows="6"
+          <textarea class="field-input" id="delivOtherDesc" rows="5"
             placeholder="e.g. 10 bags of cement, 2 pallets of sand, reinforcement bars…"
             style="resize:vertical"></textarea>
         </div>
       </div>
 
       <!-- Notes (shared) -->
-      <div class="field-group" style="margin-top:8px">
+      <div class="field-group" style="margin-top:6px">
         <label class="field-label" for="delivNotes">Notes / Special Instructions</label>
         <textarea class="field-input" id="delivNotes" rows="2"
           placeholder="e.g. deliver to south gate, call before arriving…" style="resize:vertical"></textarea>

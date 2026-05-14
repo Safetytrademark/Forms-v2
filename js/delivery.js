@@ -31,8 +31,6 @@ function openDeliveryModal() {
 
   // Reset all qty inputs, textareas, error
   document.querySelectorAll('.delivery-qty').forEach(el => { el.value = ''; });
-  const poEl = document.getElementById('delivPoNumber');
-  if (poEl) poEl.value = '';
   const timeEl = document.getElementById('delivNeededByTime');
   if (timeEl) timeEl.value = '';
   const otherEl = document.getElementById('delivOtherDesc');
@@ -114,7 +112,6 @@ async function submitDeliveryRequest() {
   const neededBy     = document.getElementById('delivNeededBy')?.value || null;
   const neededByTime = (document.getElementById('delivNeededByTime')?.value || '').trim() || null;
   const notes        = (document.getElementById('delivNotes')?.value || '').trim();
-  const poNumber     = (document.getElementById('delivPoNumber')?.value || '').trim() || null;
   const activeTab    = getActiveDelivTab();
 
   if (errEl) errEl.textContent = '';
@@ -156,8 +153,7 @@ async function submitDeliveryRequest() {
       items,
       notes:          notes || null,
       needed_by:      neededBy || null,
-      needed_by_time: neededByTime || null,
-      po_number:      poNumber || null
+      needed_by_time: neededByTime || null
     });
 
     if (error) throw error;
