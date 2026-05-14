@@ -1,7 +1,24 @@
 // ── Foreman Equipment Panel ────────────────────────────────────────────────
 // Allows foremans to view equipment at their allowed sites and transfer items.
 
-const EQ_ALL_SITES = ['145 E Columbia','Reign','Brentwood','Woodland','LASP','Drake','B7','YARD'];
+// Maps project code (first token of allowed_projects string) → site abbreviation
+const PROJECT_TO_SITE = {
+  '19TM019': 'CENTRA',
+  '23TM001': 'DRAKE',
+  '23TM007': 'WLAND',
+  '23TM009': 'ALBERNI',
+  '24TM002': 'B-5/6',
+  '24TM010': 'COLUMBIA',
+  '25TM001': 'B-7',
+  '25TM004': 'IPL33',
+  '25TM006': 'ARBUTUS',
+  '25TM007': 'REIGN',
+  '25TM009': 'B-P3',
+  '25TM010': 'FHALL',
+  '25TM011': 'FRASER'
+};
+
+const EQ_ALL_SITES = ['CENTRA','DRAKE','WLAND','ALBERNI','B-5/6','COLUMBIA','B-7','IPL33','ARBUTUS','REIGN','B-P3','FHALL','FRASER','YARD'];
 let _fTransferItem = null;
 
 function openEquipmentOverlay() {
@@ -20,12 +37,14 @@ async function loadForemanEquipment() {
   listEl.innerHTML = '<div style="padding:20px;color:#8b8d96;text-align:center">Loading…</div>';
 
   // Determine which sites this foreman can see
+  // allowed_projects entries look like "24TM010 - Axiom - 145 East Columbia St"
+  // Extract the project code (first token) and map to site abbreviation
   const allowedProjects = window.currentProfile?.allowed_projects || [];
-  // Match site names against allowed projects (case-insensitive partial match)
   const visibleSites = allowedProjects.length > 0
-    ? EQ_ALL_SITES.filter(site =>
-        allowedProjects.some(p => site.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(site.toLowerCase()))
-      )
+    ? [...new Set(allowedProjects.map(p => {
+        const code = p.trim().split(/\s+/)[0].toUpperCase();
+        return PROJECT_TO_SITE[code] || null;
+      }).filter(Boolean))]
     : EQ_ALL_SITES; // if no projects assigned, show all (graceful fallback)
 
   const sitesToShow = visibleSites.length > 0 ? visibleSites : EQ_ALL_SITES;

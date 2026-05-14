@@ -658,9 +658,10 @@ async function loadSubmissions() {
 // ═════════════════════════════════════════════════════════════════════════════
 //  EQUIPMENT
 // ═════════════════════════════════════════════════════════════════════════════
-const EQ_SITES = ['145 E Columbia','Reign','Brentwood','Woodland','LASP','Drake','B7','YARD'];
-const EQ_CATS  = ['Vehicles','Mixers','Saws','Power Tools','Scaffold','Miscellaneous'];
-let _eqTransferItem = null; // { id, name, category }
+const EQ_SITES = ['CENTRA','DRAKE','WLAND','ALBERNI','B-5/6','COLUMBIA','B-7','IPL33','ARBUTUS','REIGN','B-P3','FHALL','FRASER','YARD'];
+const EQ_SECTIONS = ['TM Equipment','Rental'];
+const EQ_CATS  = ['Vehicles','Mixers','Saws','Power Tools','Scaffold','Miscellaneous','Machines'];
+let _eqTransferItem = null; // { id, name, category, section }
 
 async function loadEquipment() {
   const listWrap = document.getElementById('equipmentList');
@@ -673,29 +674,31 @@ async function loadEquipment() {
   listWrap.innerHTML = '<div class="admin-loading">Loading…</div>';
 
   // Fetch all equipment + locations
-  let q = sbClient.from('equipment').select('id,category,name,sort_order,equipment_locations(site_name,quantity,notes)').order('category').order('sort_order');
+  let q = sbClient.from('equipment').select('id,section,category,name,sort_order,equipment_locations(site_name,quantity,notes)').order('section').order('category').order('sort_order');
   if (catFilter) q = q.eq('category', catFilter);
 
   const { data: items, error } = await q;
   if (error || !items?.length) {
     listWrap.innerHTML = '<div class="admin-empty">No equipment found.</div>';
   } else {
-    // Group by category
-    const grouped = {};
+    // Group by section → category
+    const bySec = {};
     items.forEach(item => {
-      if (!grouped[item.category]) grouped[item.category] = [];
-      grouped[item.category].push(item);
+      const sec = item.section || 'TM Equipment';
+      if (!bySec[sec]) bySec[sec] = {};
+      if (!bySec[sec][item.category]) bySec[sec][item.category] = [];
+      bySec[sec][item.category].push(item);
     });
 
     const activeSites = siteFilter ? [siteFilter] : EQ_SITES;
 
-    listWrap.innerHTML = Object.entries(grouped).map(([cat, catItems]) => `
+    const renderCatBlock = (cat, catItems) => `
       <div class="eq-category-block">
         <div class="eq-category-header">${cat}</div>
         <div class="eq-table">
           <div class="eq-table-head">
             <div class="eq-col-item">Item</div>
-            ${activeSites.map(s => `<div class="eq-col-site">${s.split(' ')[0]}</div>`).join('')}
+            ${activeSites.map(s => `<div class="eq-col-site">${s}</div>`).join('')}
             <div class="eq-col-action"></div>
           </div>
           ${catItems.map(item => {
@@ -710,11 +713,19 @@ async function loadEquipment() {
                 return `<div class="eq-col-site eq-qty" data-eq="${esc(item.id)}" data-site="${esc(s)}" data-qty="${q}" onclick="editQty(this)">${q > 0 ? q : '<span class="eq-zero">—</span>'}</div>`;
               }).join('')}
               <div class="eq-col-action">
-                <button class="eq-transfer-btn" onclick='openTransferModal(${JSON.stringify({id:item.id,name:item.name,category:item.category})})'>⇄ Transfer</button>
+                <button class="eq-transfer-btn" onclick='openTransferModal(${JSON.stringify({id:item.id,name:item.name,category:item.category,section:item.section||'TM Equipment'})})'>⇄ Transfer</button>
               </div>
             </div>`;
           }).join('')}
         </div>
+      </div>`;
+
+    // Render section headers then categories
+    const sectionOrder = ['TM Equipment','Rental'];
+    listWrap.innerHTML = sectionOrder.filter(sec => bySec[sec]).map(sec => `
+      <div class="eq-section-block">
+        <div class="eq-section-header">${sec === 'Rental' ? '🏗 Rental Scaffold' : '🔧 TM Equipment'}</div>
+        ${Object.entries(bySec[sec]).map(([cat, catItems]) => renderCatBlock(cat, catItems)).join('')}
       </div>`).join('');
   }
 
@@ -757,10 +768,9 @@ async function editQty(el) {
   if (error) { alert('Error saving: ' + error.message); return; }
   el.dataset.qty = qty;
   el.innerHTML = qty > 0 ? qty : '<span class="eq-zero">—</span>';
-  el.parentElement.classList.toggle('eq-row-empty', !EQ_SITES.some(s => {
-    const c = el.parentElement.querySelector(`[data-site="${s}"]`);
-    return c && parseInt(c.dataset.qty) > 0;
-  }));
+  el.parentElement.classList.toggle('eq-row-empty', !Array.from(
+    el.parentElement.querySelectorAll('[data-qty]')
+  ).some(c => parseInt(c.dataset.qty) > 0));
 }
 
 function openTransferModal(item) {
@@ -839,11 +849,12 @@ function closeAddEquipmentModal(e) {
     document.getElementById('addEquipmentModal').style.display = 'none';
 }
 async function confirmAddEquipment() {
+  const sec  = document.getElementById('newEqSection')?.value || 'TM Equipment';
   const cat  = document.getElementById('newEqCategory').value;
   const name = document.getElementById('newEqName').value.trim();
   if (!name) { alert('Enter an item name.'); return; }
 
-  const { error } = await sbClient.from('equipment').insert({ category: cat, name });
+  const { error } = await sbClient.from('equipment').insert({ section: sec, category: cat, name });
   if (error) { alert('Error: ' + error.message); return; }
   document.getElementById('addEquipmentModal').style.display = 'none';
   loadEquipment();

@@ -213,14 +213,11 @@
     <div class="eq-toolbar">
       <select id="eqSiteFilter" onchange="loadEquipment()" class="admin-select">
         <option value="">All Sites</option>
-        <option>145 E Columbia</option>
-        <option>Reign</option>
-        <option>Brentwood</option>
-        <option>Woodland</option>
-        <option>LASP</option>
-        <option>Drake</option>
-        <option>B7</option>
-        <option>YARD</option>
+        <option>CENTRA</option><option>DRAKE</option><option>WLAND</option>
+        <option>ALBERNI</option><option>B-5/6</option><option>COLUMBIA</option>
+        <option>B-7</option><option>IPL33</option><option>ARBUTUS</option>
+        <option>REIGN</option><option>B-P3</option><option>FHALL</option>
+        <option>FRASER</option><option>YARD</option>
       </select>
       <select id="eqCatFilter" onchange="loadEquipment()" class="admin-select">
         <option value="">All Categories</option>
@@ -230,6 +227,7 @@
         <option>Power Tools</option>
         <option>Scaffold</option>
         <option>Miscellaneous</option>
+        <option>Machines</option>
       </select>
       <button class="admin-btn-primary" onclick="openAddEquipmentModal()">+ Add Item</button>
     </div>
@@ -258,18 +256,22 @@
         <label class="admin-label">From Site</label>
         <select id="transferFrom" class="admin-select" style="width:100%">
           <option value="">Select site…</option>
-          <option>145 E Columbia</option><option>Reign</option><option>Brentwood</option>
-          <option>Woodland</option><option>LASP</option><option>Drake</option>
-          <option>B7</option><option>YARD</option>
+          <option>CENTRA</option><option>DRAKE</option><option>WLAND</option>
+          <option>ALBERNI</option><option>B-5/6</option><option>COLUMBIA</option>
+          <option>B-7</option><option>IPL33</option><option>ARBUTUS</option>
+          <option>REIGN</option><option>B-P3</option><option>FHALL</option>
+          <option>FRASER</option><option>YARD</option>
         </select>
       </div>
       <div class="eq-modal-field">
         <label class="admin-label">To Site</label>
         <select id="transferTo" class="admin-select" style="width:100%">
           <option value="">Select site…</option>
-          <option>145 E Columbia</option><option>Reign</option><option>Brentwood</option>
-          <option>Woodland</option><option>LASP</option><option>Drake</option>
-          <option>B7</option><option>YARD</option>
+          <option>CENTRA</option><option>DRAKE</option><option>WLAND</option>
+          <option>ALBERNI</option><option>B-5/6</option><option>COLUMBIA</option>
+          <option>B-7</option><option>IPL33</option><option>ARBUTUS</option>
+          <option>REIGN</option><option>B-P3</option><option>FHALL</option>
+          <option>FRASER</option><option>YARD</option>
         </select>
       </div>
       <div class="eq-modal-field">
@@ -295,10 +297,18 @@
     <h3 class="admin-modal-title">Add Equipment Item</h3>
     <div class="admin-modal-body">
       <div class="eq-modal-field">
+        <label class="admin-label">Section</label>
+        <select id="newEqSection" class="admin-select" style="width:100%">
+          <option value="TM Equipment">TM Equipment</option>
+          <option value="Rental">Rental</option>
+        </select>
+      </div>
+      <div class="eq-modal-field">
         <label class="admin-label">Category</label>
         <select id="newEqCategory" class="admin-select" style="width:100%">
           <option>Vehicles</option><option>Mixers</option><option>Saws</option>
           <option>Power Tools</option><option>Scaffold</option><option>Miscellaneous</option>
+          <option>Machines</option>
         </select>
       </div>
       <div class="eq-modal-field">
