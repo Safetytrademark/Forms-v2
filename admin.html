@@ -31,13 +31,17 @@
 
 <!-- ── Tab Nav ──────────────────────────────────────────────────────────── -->
 <div class="admin-tabs">
-  <button class="admin-tab active" data-tab="foremans"   onclick="switchTab('foremans')">👷 Foremans</button>
-  <button class="admin-tab" data-tab="projects"          onclick="switchTab('projects')">🏗️ Projects</button>
-  <button class="admin-tab" data-tab="documents"         onclick="switchTab('documents')">📄 Documents</button>
-  <button class="admin-tab" data-tab="deliveries"        onclick="switchTab('deliveries')">📦 Deliveries</button>
-  <button class="admin-tab" data-tab="by-project"        onclick="switchTab('by-project')">📊 By Project</button>
-  <button class="admin-tab" data-tab="submissions"       onclick="switchTab('submissions')">📋 Submissions</button>
-  <button class="admin-tab" data-tab="equipment"         onclick="switchTab('equipment')">🔧 Equipment</button>
+  <button class="admin-tab active" data-tab="foremans"    onclick="switchTab('foremans')">👷 Foremans</button>
+  <button class="admin-tab" data-tab="projects"           onclick="switchTab('projects')">🏗️ Projects</button>
+  <button class="admin-tab" data-tab="documents"          onclick="switchTab('documents')">📄 Documents</button>
+  <button class="admin-tab" data-tab="deliveries"         onclick="switchTab('deliveries')">📦 Deliveries</button>
+  <button class="admin-tab" data-tab="by-project"         onclick="switchTab('by-project')">📊 By Project</button>
+  <button class="admin-tab" data-tab="submissions"        onclick="switchTab('submissions')">📋 Submissions</button>
+  <div class="admin-tab-divider"></div>
+  <button class="admin-tab" data-tab="tm-equipment"       onclick="switchTab('tm-equipment')">🔧 TM Equipment</button>
+  <button class="admin-tab" data-tab="rental"             onclick="switchTab('rental')">🏗 Rental Scaffold</button>
+  <div class="admin-tab-divider"></div>
+  <button class="admin-tab admin-tab-link" onclick="window.open('calendar.html','_blank')">📅 Calendar ↗</button>
 </div>
 
 <!-- ── Main Content ──────────────────────────────────────────────────────── -->
@@ -203,15 +207,14 @@
     </div>
   </section>
 
-  <!-- ── Equipment Tab ──────────────────────────────────────────────────────── -->
-  <section class="admin-panel" id="tab-equipment">
+  <!-- ── TM Equipment Tab ──────────────────────────────────────────────────── -->
+  <section class="admin-panel" id="tab-tm-equipment">
     <div class="admin-section-header">
-      <h2 class="admin-section-title">Equipment</h2>
-      <p class="admin-section-sub">Track tools and equipment by site. Transfer between sites and view history.</p>
+      <h2 class="admin-section-title">🔧 TM Equipment</h2>
+      <p class="admin-section-sub">Trademark-owned tools and equipment tracked by site.</p>
     </div>
-
     <div class="eq-toolbar">
-      <select id="eqSiteFilter" onchange="loadEquipment()" class="admin-select">
+      <select id="tmSiteFilter" onchange="loadTMEquipment()" class="admin-select">
         <option value="">All Sites</option>
         <option>CENTRA</option><option>DRAKE</option><option>WLAND</option>
         <option>ALBERNI</option><option>B-5/6</option><option>COLUMBIA</option>
@@ -219,28 +222,38 @@
         <option>REIGN</option><option>B-P3</option><option>FHALL</option>
         <option>FRASER</option><option>YARD</option>
       </select>
-      <select id="eqCatFilter" onchange="loadEquipment()" class="admin-select">
-        <option value="">All Categories</option>
-        <option>Vehicles</option>
-        <option>Mixers</option>
-        <option>Saws</option>
-        <option>Power Tools</option>
-        <option>Scaffold</option>
-        <option>Miscellaneous</option>
-        <option>Machines</option>
-      </select>
-      <button class="admin-btn-primary" onclick="openAddEquipmentModal()">+ Add Item</button>
+      <button class="admin-btn-primary" onclick="openAddEquipmentModal('TM Equipment')">+ Add Item</button>
     </div>
-
-    <div id="equipmentList" class="admin-table-wrap">
-      <div class="admin-loading">Loading equipment…</div>
+    <div id="tmEquipList" class="admin-table-wrap">
+      <div class="admin-loading">Loading…</div>
     </div>
-
     <div class="admin-section-header" style="margin-top:32px">
       <h2 class="admin-section-title" style="font-size:15px">Transfer History</h2>
     </div>
-    <div id="transferHistory" class="admin-table-wrap">
+    <div id="tmHistory" class="admin-table-wrap">
       <div class="admin-loading">Loading history…</div>
+    </div>
+  </section>
+
+  <!-- ── Rental Scaffold Tab ────────────────────────────────────────────────── -->
+  <section class="admin-panel" id="tab-rental">
+    <div class="admin-section-header">
+      <h2 class="admin-section-title">🏗 Rental Scaffold</h2>
+      <p class="admin-section-sub">Rental scaffold inventory tracked by site.</p>
+    </div>
+    <div class="eq-toolbar">
+      <select id="rentalSiteFilter" onchange="loadRentalEquipment()" class="admin-select">
+        <option value="">All Sites</option>
+        <option>CENTRA</option><option>DRAKE</option><option>WLAND</option>
+        <option>ALBERNI</option><option>B-5/6</option><option>COLUMBIA</option>
+        <option>B-7</option><option>IPL33</option><option>ARBUTUS</option>
+        <option>REIGN</option><option>B-P3</option><option>FHALL</option>
+        <option>FRASER</option><option>YARD</option>
+      </select>
+      <button class="admin-btn-primary" onclick="openAddEquipmentModal('Rental')">+ Add Item</button>
+    </div>
+    <div id="rentalEquipList" class="admin-table-wrap">
+      <div class="admin-loading">Loading…</div>
     </div>
   </section>
 

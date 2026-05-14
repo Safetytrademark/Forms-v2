@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (lbl) lbl.textContent = profile.full_name || adminCurrentUser.email;
 
   // Load all tabs
-  await Promise.all([loadForemans(), loadProjects(), loadDocuments(), loadDeliveries(), loadByProject(), loadSubmissions(), loadEquipment()]);
+  await Promise.all([loadForemans(), loadProjects(), loadDocuments(), loadDeliveries(), loadByProject(), loadSubmissions(), loadTMEquipment(), loadRentalEquipment()]);
 });
 
 // ── Sign out ──────────────────────────────────────────────────────────────────
@@ -408,8 +408,11 @@ function renderDeliveryCard(req, compact = false) {
   };
   const color = statusColors[req.status] || 'var(--text-muted)';
 
-  const siteAbbr  = projNameToAbbr(req.projects?.name);
-  const poLabel   = req.po_number ? ` · PO: <strong>${esc(req.po_number)}</strong>` : '';
+  const projFull  = req.projects?.name || '';
+  const jobCode   = projFull.trim().split(/\s+/)[0];          // "24TM010"
+  const siteAbbr  = projNameToAbbr(projFull);                 // "COLUMBIA"
+  const poLabel   = jobCode ? ` · <span style="opacity:.65;font-weight:500">PO: ${esc(jobCode)}</span>` : '';
+  const suppPO    = req.po_number ? ` · <span style="opacity:.65;font-weight:500">Supplier PO: ${esc(req.po_number)}</span>` : '';
   const itemsList = formatDeliveryItems(req.items);
   const timeStr   = req.needed_by_time ? ` at <strong>${esc(req.needed_by_time)}</strong>` : '';
   const neededBy  = req.needed_by
@@ -430,7 +433,7 @@ function renderDeliveryCard(req, compact = false) {
     <div class="delivery-card" style="border-left-color:${color}">
       <div class="delivery-card-header">
         <div>
-          <div class="admin-cell-name">${siteAbbr}${poLabel}</div>
+          <div class="admin-cell-name">${siteAbbr}${poLabel}${suppPO}</div>
           <div class="admin-cell-meta">${esc(req.profiles?.full_name || 'Unknown foreman')} · ${formatDate(req.requested_at)}${neededBy ? ' · ' + neededBy : ''}</div>
         </div>
         <span class="delivery-status-pill" style="background:${color}20;color:${color}">${statusLabels[req.status] || req.status}</span>
@@ -676,85 +679,48 @@ async function loadSubmissions() {
 //  EQUIPMENT
 // ═════════════════════════════════════════════════════════════════════════════
 const EQ_SITES = ['CENTRA','DRAKE','WLAND','ALBERNI','B-5/6','COLUMBIA','B-7','IPL33','ARBUTUS','REIGN','B-P3','FHALL','FRASER','YARD'];
-const EQ_SECTIONS = ['TM Equipment','Rental'];
-const EQ_CATS  = ['Vehicles','Mixers','Saws','Power Tools','Scaffold','Miscellaneous','Machines'];
-let _eqTransferItem = null; // { id, name, category, section }
+let _eqTransferItem = null;
 
-async function loadEquipment() {
-  const listWrap = document.getElementById('equipmentList');
-  const histWrap = document.getElementById('transferHistory');
-  if (!listWrap) return;
-
-  const siteFilter = document.getElementById('eqSiteFilter')?.value;
-  const catFilter  = document.getElementById('eqCatFilter')?.value;
-
-  listWrap.innerHTML = '<div class="admin-loading">Loading…</div>';
-
-  // Fetch all equipment + locations
-  let q = sbClient.from('equipment').select('id,section,category,name,sort_order,equipment_locations(site_name,quantity,notes)').order('section').order('category').order('sort_order');
-  if (catFilter) q = q.eq('category', catFilter);
-
-  const { data: items, error } = await q;
-  if (error || !items?.length) {
-    listWrap.innerHTML = '<div class="admin-empty">No equipment found.</div>';
-  } else {
-    // Group by section → category
-    const bySec = {};
-    items.forEach(item => {
-      const sec = item.section || 'TM Equipment';
-      if (!bySec[sec]) bySec[sec] = {};
-      if (!bySec[sec][item.category]) bySec[sec][item.category] = [];
-      bySec[sec][item.category].push(item);
-    });
-
-    const activeSites = siteFilter ? [siteFilter] : EQ_SITES;
-
-    const renderCatBlock = (cat, catItems) => `
-      <div class="eq-category-block">
-        <div class="eq-category-header">${cat}</div>
-        <div class="eq-table">
-          <div class="eq-table-head">
-            <div class="eq-col-item">Item</div>
-            ${activeSites.map(s => `<div class="eq-col-site">${s}</div>`).join('')}
-            <div class="eq-col-action"></div>
-          </div>
-          ${catItems.map(item => {
-            const locs = {};
-            (item.equipment_locations || []).forEach(l => { locs[l.site_name] = l.quantity; });
-            const hasQty = activeSites.some(s => (locs[s] || 0) > 0);
-            return `
-            <div class="eq-table-row ${hasQty ? '' : 'eq-row-empty'}">
-              <div class="eq-col-item">${esc(item.name)}</div>
-              ${activeSites.map(s => {
-                const q = locs[s] || 0;
-                return `<div class="eq-col-site eq-qty" data-eq="${esc(item.id)}" data-site="${esc(s)}" data-qty="${q}" onclick="editQty(this)">${q > 0 ? q : '<span class="eq-zero">—</span>'}</div>`;
-              }).join('')}
-              <div class="eq-col-action">
-                <button class="eq-transfer-btn" onclick='openTransferModal(${JSON.stringify({id:item.id,name:item.name,category:item.category,section:item.section||'TM Equipment'})})'>⇄ Transfer</button>
-              </div>
-            </div>`;
-          }).join('')}
+// ── Shared category block renderer ────────────────────────────────────────────
+function _buildEqCatBlock(cat, catItems, activeSites) {
+  return `
+    <div class="eq-category-block">
+      <div class="eq-category-header">${cat}</div>
+      <div class="eq-table">
+        <div class="eq-table-head">
+          <div class="eq-col-item">Item</div>
+          ${activeSites.map(s => `<div class="eq-col-site">${s}</div>`).join('')}
+          <div class="eq-col-action"></div>
         </div>
-      </div>`;
+        ${catItems.map(item => {
+          const locs = {};
+          (item.equipment_locations || []).forEach(l => { locs[l.site_name] = l.quantity; });
+          const hasQty = activeSites.some(s => (locs[s] || 0) > 0);
+          return `
+          <div class="eq-table-row ${hasQty ? '' : 'eq-row-empty'}">
+            <div class="eq-col-item">${esc(item.name)}</div>
+            ${activeSites.map(s => {
+              const q = locs[s] || 0;
+              return `<div class="eq-col-site eq-qty" data-eq="${esc(item.id)}" data-site="${esc(s)}" data-qty="${q}" onclick="editQty(this)">${q > 0 ? q : '<span class="eq-zero">—</span>'}</div>`;
+            }).join('')}
+            <div class="eq-col-action">
+              <button class="eq-transfer-btn" onclick='openTransferModal(${JSON.stringify({id:item.id,name:item.name,category:item.category,section:item.section||'TM Equipment'})})'>⇄</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
 
-    // Render section headers then categories
-    const sectionOrder = ['TM Equipment','Rental'];
-    listWrap.innerHTML = sectionOrder.filter(sec => bySec[sec]).map(sec => `
-      <div class="eq-section-block">
-        <div class="eq-section-header">${sec === 'Rental' ? '🏗 Rental Scaffold' : '🔧 TM Equipment'}</div>
-        ${Object.entries(bySec[sec]).map(([cat, catItems]) => renderCatBlock(cat, catItems)).join('')}
-      </div>`).join('');
-  }
-
-  // Transfer history
-  if (histWrap) {
-    histWrap.innerHTML = '<div class="admin-loading">Loading…</div>';
-    const { data: hist } = await sbClient.from('equipment_transfers')
-      .select('*').order('created_at', { ascending: false }).limit(30);
-    if (!hist?.length) {
-      histWrap.innerHTML = '<div class="admin-empty">No transfers yet.</div>';
-    } else {
-      histWrap.innerHTML = hist.map(t => `
+// ── Shared history renderer ────────────────────────────────────────────────────
+async function _renderTransferHistory(histId) {
+  const histWrap = document.getElementById(histId);
+  if (!histWrap) return;
+  histWrap.innerHTML = '<div class="admin-loading">Loading…</div>';
+  const { data: hist } = await sbClient.from('equipment_transfers')
+    .select('*').order('created_at', { ascending: false }).limit(30);
+  histWrap.innerHTML = hist?.length
+    ? hist.map(t => `
         <div class="admin-table-row">
           <div class="admin-table-cell">
             <div class="admin-cell-name">${esc(t.equipment_name)}</div>
@@ -764,9 +730,45 @@ async function loadEquipment() {
               ${t.notes ? `&nbsp;·&nbsp; <em>${esc(t.notes)}</em>` : ''}
             </div>
           </div>
-        </div>`).join('');
-    }
+        </div>`).join('')
+    : '<div class="admin-empty">No transfers yet.</div>';
+}
+
+// ── Core section loader ────────────────────────────────────────────────────────
+async function _loadEquipSection(section, siteFilterId, listId, histId) {
+  const listWrap = document.getElementById(listId);
+  if (!listWrap) return;
+
+  const siteFilter = document.getElementById(siteFilterId)?.value;
+  listWrap.innerHTML = '<div class="admin-loading">Loading…</div>';
+
+  const { data: items, error } = await sbClient.from('equipment')
+    .select('id,section,category,name,sort_order,equipment_locations(site_name,quantity,notes)')
+    .eq('section', section)
+    .order('category').order('sort_order');
+
+  if (error || !items?.length) {
+    listWrap.innerHTML = '<div class="admin-empty">No items found.</div>';
+  } else {
+    const activeSites = siteFilter ? [siteFilter] : EQ_SITES;
+    const grouped = {};
+    items.forEach(item => {
+      if (!grouped[item.category]) grouped[item.category] = [];
+      grouped[item.category].push(item);
+    });
+    listWrap.innerHTML = Object.entries(grouped)
+      .map(([cat, catItems]) => _buildEqCatBlock(cat, catItems, activeSites))
+      .join('');
   }
+
+  if (histId) await _renderTransferHistory(histId);
+}
+
+async function loadTMEquipment() {
+  await _loadEquipSection('TM Equipment', 'tmSiteFilter', 'tmEquipList', 'tmHistory');
+}
+async function loadRentalEquipment() {
+  await _loadEquipSection('Rental', 'rentalSiteFilter', 'rentalEquipList', null);
 }
 
 async function editQty(el) {
@@ -854,11 +856,16 @@ async function confirmTransfer() {
   });
 
   document.getElementById('transferModal').style.display = 'none';
-  loadEquipment();
+  loadTMEquipment();
+  loadRentalEquipment();
 }
 
-function openAddEquipmentModal() {
+function openAddEquipmentModal(defaultSection) {
   document.getElementById('newEqName').value = '';
+  if (defaultSection) {
+    const sel = document.getElementById('newEqSection');
+    if (sel) sel.value = defaultSection;
+  }
   document.getElementById('addEquipmentModal').style.display = 'flex';
 }
 function closeAddEquipmentModal(e) {
@@ -874,7 +881,7 @@ async function confirmAddEquipment() {
   const { error } = await sbClient.from('equipment').insert({ section: sec, category: cat, name });
   if (error) { alert('Error: ' + error.message); return; }
   document.getElementById('addEquipmentModal').style.display = 'none';
-  loadEquipment();
+  if (sec === 'Rental') loadRentalEquipment(); else loadTMEquipment();
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

@@ -115,8 +115,8 @@ function renderCalendar() {
     visible.forEach(req => {
       const chip = document.createElement('div');
       chip.className = `cal-chip ${req.status}`;
-      chip.textContent = req.projects?.name || 'Unknown';
-      chip.title = `${req.projects?.name} — ${STATUS_LABEL[req.status]}`;
+      chip.textContent = calProjAbbr(req.projects?.name);
+      chip.title = `${req.projects?.name || 'Unknown'} — ${STATUS_LABEL[req.status]}`;
       chip.draggable = true;
       chip.dataset.id = req.id;
       chip.addEventListener('dragstart', e => {
@@ -168,11 +168,16 @@ function showPopover(e, req) {
     ? new Date(req.needed_by + 'T12:00:00').toLocaleDateString('en-AU', { weekday:'short', month:'short', day:'numeric' })
     : '';
 
+  const abbr = calProjAbbr(req.projects?.name);
+  const fullName = req.projects?.name || '';
+  const jobCode = fullName.trim().split(/\s+/)[0];
+
   const pop = document.createElement('div');
   pop.className = 'cal-popover';
   pop.innerHTML = `
     <button class="cal-popover-close" onclick="closePopover()">✕</button>
-    <div class="cal-popover-project">${esc(req.projects?.name || 'Unknown project')}</div>
+    <div class="cal-popover-project">${esc(abbr)} <span style="opacity:.6;font-weight:400;font-size:12px">· ${esc(jobCode)}</span></div>
+    <div class="cal-popover-row" style="opacity:.7">${esc(fullName)}</div>
     <div class="cal-popover-row">👷 ${esc(req.profiles?.full_name || 'Unknown foreman')}</div>
     ${dateStr ? `<div class="cal-popover-row">📅 ${dateStr}${timeStr}</div>` : ''}
     ${req.notes ? `<div class="cal-popover-row">📝 ${esc(req.notes)}</div>` : ''}
@@ -233,6 +238,21 @@ function esc(str) {
 function showLoading() {
   const container = document.getElementById('calGrid');
   container.innerHTML = `<div class="cal-loading" style="grid-column:1/-1">Loading…</div>`;
+}
+
+// ── Project code → site abbreviation ─────────────────────────────────────────
+const CAL_PROJ_TO_SITE = {
+  '19TM019': 'CENTRA',  '23TM001': 'DRAKE',   '23TM007': 'WLAND',
+  '23TM009': 'ALBERNI', '24TM002': 'B-5/6',   '24TM010': 'COLUMBIA',
+  '25TM001': 'B-7',     '25TM004': 'IPL33',   '25TM006': 'ARBUTUS',
+  '25TM007': 'REIGN',   '25TM009': 'B-P3',    '25TM010': 'FHALL',
+  '25TM011': 'FRASER',  '26TM001': 'LASP',    '26TM002': 'MTRANS'
+};
+
+function calProjAbbr(name) {
+  if (!name) return '—';
+  const code = name.trim().split(/\s+/)[0].toUpperCase();
+  return CAL_PROJ_TO_SITE[code] || code;
 }
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
