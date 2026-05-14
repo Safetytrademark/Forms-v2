@@ -55,16 +55,15 @@ async function loadForemans() {
 
   const { data: foremans, error } = await sbClient
     .from('profiles')
-    .select('id, full_name, created_at')
-    .eq('role', 'foreman')
+    .select('id, full_name, role, created_at')
     .order('full_name');
 
   if (error || !foremans?.length) {
-    wrap.innerHTML = '<div class="admin-empty">No foreman accounts yet. Create them in the Supabase Dashboard → Authentication → Users.</div>';
+    wrap.innerHTML = '<div class="admin-empty">No accounts yet. Create them in the Supabase Dashboard → Authentication → Users.</div>';
     return;
   }
 
-  // Count project assignments per foreman
+  // Count project assignments per user
   const { data: assignments } = await sbClient
     .from('foreman_projects')
     .select('foreman_id');
@@ -75,7 +74,10 @@ async function loadForemans() {
   wrap.innerHTML = foremans.map(f => `
     <div class="admin-table-row">
       <div class="admin-table-cell">
-        <div class="admin-cell-name">${esc(f.full_name) || '(no name)'}</div>
+        <div class="admin-cell-name">
+          ${esc(f.full_name) || '(no name)'}
+          ${f.role === 'admin' ? '<span class="admin-role-badge">Admin</span>' : ''}
+        </div>
         <div class="admin-cell-meta">${counts[f.id] || 0} project(s) assigned</div>
       </div>
       <button class="admin-btn-icon" onclick="openAssignModal('${f.id}', '${esc(f.full_name)}')">

@@ -2032,6 +2032,26 @@ async function handleSubmit() {
     const pdfBuffer   = await generatePDF(state, state.photos);
     const pdfFilename = buildPDFFilename();
 
+    // ── Upload PDF to Supabase Storage ────────────────────────────────────────
+    let pdfStorageUrl = null;
+    try {
+      if (window.currentUser) {
+        const fileName = `${window.currentUser.id}/${pdfFilename}`;
+        const pdfBlob  = new Blob([pdfBuffer], { type: 'application/pdf' });
+        const { error: upErr } = await sbClient.storage
+          .from('form-submissions')
+          .upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: false });
+        if (!upErr) {
+          const { data: urlData } = await sbClient.storage
+            .from('form-submissions')
+            .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year
+          pdfStorageUrl = urlData?.signedUrl || null;
+        }
+      }
+    } catch (upErr) {
+      console.warn('PDF upload to storage failed:', upErr);
+    }
+
     // ── Log submission to Supabase ────────────────────────────────────────────
     try {
       if (window.currentUser) {
@@ -2039,7 +2059,8 @@ async function handleSubmit() {
           foreman_id:      window.currentUser.id,
           foreman_name:    window.currentProfile?.full_name || '',
           project_name:    state.project,
-          submission_type: state.submissionType
+          submission_type: state.submissionType,
+          pdf_url:         pdfStorageUrl
         });
       }
     } catch (logErr) {
