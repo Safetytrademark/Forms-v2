@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (lbl) lbl.textContent = profile.full_name || adminCurrentUser.email;
 
   // Load all tabs
-  await Promise.all([loadForemans(), loadProjects(), loadDocuments(), loadDeliveries(), loadByProject(), loadSubmissions()]);
+  await Promise.all([loadForemans(), loadProjects(), loadDocuments(), loadDeliveries(), loadByProject(), loadSubmissions(), loadEquipment()]);
 });
 
 // ── Sign out ──────────────────────────────────────────────────────────────────
@@ -653,6 +653,200 @@ async function loadSubmissions() {
         : ''
       }
     </div>`).join('');
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  EQUIPMENT
+// ═════════════════════════════════════════════════════════════════════════════
+const EQ_SITES = ['145 E Columbia','Reign','Brentwood','Woodland','LASP','Drake','B7','YARD'];
+const EQ_CATS  = ['Vehicles','Mixers','Saws','Power Tools','Scaffold','Miscellaneous'];
+let _eqTransferItem = null; // { id, name, category }
+
+async function loadEquipment() {
+  const listWrap = document.getElementById('equipmentList');
+  const histWrap = document.getElementById('transferHistory');
+  if (!listWrap) return;
+
+  const siteFilter = document.getElementById('eqSiteFilter')?.value;
+  const catFilter  = document.getElementById('eqCatFilter')?.value;
+
+  listWrap.innerHTML = '<div class="admin-loading">Loading…</div>';
+
+  // Fetch all equipment + locations
+  let q = sbClient.from('equipment').select('id,category,name,sort_order,equipment_locations(site_name,quantity,notes)').order('category').order('sort_order');
+  if (catFilter) q = q.eq('category', catFilter);
+
+  const { data: items, error } = await q;
+  if (error || !items?.length) {
+    listWrap.innerHTML = '<div class="admin-empty">No equipment found.</div>';
+  } else {
+    // Group by category
+    const grouped = {};
+    items.forEach(item => {
+      if (!grouped[item.category]) grouped[item.category] = [];
+      grouped[item.category].push(item);
+    });
+
+    const activeSites = siteFilter ? [siteFilter] : EQ_SITES;
+
+    listWrap.innerHTML = Object.entries(grouped).map(([cat, catItems]) => `
+      <div class="eq-category-block">
+        <div class="eq-category-header">${cat}</div>
+        <div class="eq-table">
+          <div class="eq-table-head">
+            <div class="eq-col-item">Item</div>
+            ${activeSites.map(s => `<div class="eq-col-site">${s.split(' ')[0]}</div>`).join('')}
+            <div class="eq-col-action"></div>
+          </div>
+          ${catItems.map(item => {
+            const locs = {};
+            (item.equipment_locations || []).forEach(l => { locs[l.site_name] = l.quantity; });
+            const hasQty = activeSites.some(s => (locs[s] || 0) > 0);
+            return `
+            <div class="eq-table-row ${hasQty ? '' : 'eq-row-empty'}">
+              <div class="eq-col-item">${esc(item.name)}</div>
+              ${activeSites.map(s => {
+                const q = locs[s] || 0;
+                return `<div class="eq-col-site eq-qty" data-eq="${esc(item.id)}" data-site="${esc(s)}" data-qty="${q}" onclick="editQty(this)">${q > 0 ? q : '<span class="eq-zero">—</span>'}</div>`;
+              }).join('')}
+              <div class="eq-col-action">
+                <button class="eq-transfer-btn" onclick='openTransferModal(${JSON.stringify({id:item.id,name:item.name,category:item.category})})'>⇄ Transfer</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`).join('');
+  }
+
+  // Transfer history
+  if (histWrap) {
+    histWrap.innerHTML = '<div class="admin-loading">Loading…</div>';
+    const { data: hist } = await sbClient.from('equipment_transfers')
+      .select('*').order('created_at', { ascending: false }).limit(30);
+    if (!hist?.length) {
+      histWrap.innerHTML = '<div class="admin-empty">No transfers yet.</div>';
+    } else {
+      histWrap.innerHTML = hist.map(t => `
+        <div class="admin-table-row">
+          <div class="admin-table-cell">
+            <div class="admin-cell-name">${esc(t.equipment_name)}</div>
+            <div class="admin-cell-meta">
+              ${esc(t.from_site)} → ${esc(t.to_site)} &nbsp;·&nbsp; qty: <strong>${t.quantity}</strong>
+              &nbsp;·&nbsp; ${esc(t.foreman_name || 'Admin')} &nbsp;·&nbsp; ${formatDate(t.created_at)}
+              ${t.notes ? `&nbsp;·&nbsp; <em>${esc(t.notes)}</em>` : ''}
+            </div>
+          </div>
+        </div>`).join('');
+    }
+  }
+}
+
+async function editQty(el) {
+  const eqId   = el.dataset.eq;
+  const site   = el.dataset.site;
+  const curQty = parseInt(el.dataset.qty) || 0;
+  const newQty = prompt(`Update quantity for "${site}":`, curQty);
+  if (newQty === null) return;
+  const qty = parseInt(newQty);
+  if (isNaN(qty) || qty < 0) { alert('Invalid quantity.'); return; }
+
+  const { error } = await sbClient.from('equipment_locations').upsert(
+    { equipment_id: eqId, site_name: site, quantity: qty, updated_at: new Date().toISOString() },
+    { onConflict: 'equipment_id,site_name' }
+  );
+  if (error) { alert('Error saving: ' + error.message); return; }
+  el.dataset.qty = qty;
+  el.innerHTML = qty > 0 ? qty : '<span class="eq-zero">—</span>';
+  el.parentElement.classList.toggle('eq-row-empty', !EQ_SITES.some(s => {
+    const c = el.parentElement.querySelector(`[data-site="${s}"]`);
+    return c && parseInt(c.dataset.qty) > 0;
+  }));
+}
+
+function openTransferModal(item) {
+  _eqTransferItem = item;
+  document.getElementById('transferItemName').textContent = item.name + ' (' + item.category + ')';
+  document.getElementById('transferFrom').value  = '';
+  document.getElementById('transferTo').value    = '';
+  document.getElementById('transferQty').value   = '';
+  document.getElementById('transferNotes').value = '';
+  document.getElementById('transferError').textContent = '';
+  document.getElementById('transferModal').style.display = 'flex';
+}
+function closeTransferModal(e) {
+  if (!e || e.target === document.getElementById('transferModal'))
+    document.getElementById('transferModal').style.display = 'none';
+}
+
+async function confirmTransfer() {
+  const from  = document.getElementById('transferFrom').value;
+  const to    = document.getElementById('transferTo').value;
+  const qty   = parseFloat(document.getElementById('transferQty').value);
+  const notes = document.getElementById('transferNotes').value.trim();
+  const errEl = document.getElementById('transferError');
+
+  if (!from)         { errEl.textContent = 'Select a From site.'; return; }
+  if (!to)           { errEl.textContent = 'Select a To site.'; return; }
+  if (from === to)   { errEl.textContent = 'From and To cannot be the same site.'; return; }
+  if (!qty || qty < 1) { errEl.textContent = 'Enter a valid quantity.'; return; }
+
+  errEl.textContent = '';
+  const item = _eqTransferItem;
+
+  // Decrease from_site
+  const { data: fromLoc } = await sbClient.from('equipment_locations')
+    .select('quantity').eq('equipment_id', item.id).eq('site_name', from).maybeSingle();
+  const fromQty = fromLoc?.quantity || 0;
+  if (qty > fromQty) { errEl.textContent = `Only ${fromQty} available at ${from}.`; return; }
+
+  const newFromQty = fromQty - qty;
+  await sbClient.from('equipment_locations').upsert(
+    { equipment_id: item.id, site_name: from, quantity: newFromQty, updated_at: new Date().toISOString() },
+    { onConflict: 'equipment_id,site_name' }
+  );
+
+  // Increase to_site
+  const { data: toLoc } = await sbClient.from('equipment_locations')
+    .select('quantity').eq('equipment_id', item.id).eq('site_name', to).maybeSingle();
+  const toQty = (toLoc?.quantity || 0) + qty;
+  await sbClient.from('equipment_locations').upsert(
+    { equipment_id: item.id, site_name: to, quantity: toQty, updated_at: new Date().toISOString() },
+    { onConflict: 'equipment_id,site_name' }
+  );
+
+  // Log transfer
+  const profile = await sbClient.from('profiles').select('full_name').eq('id', adminCurrentUser.id).single();
+  await sbClient.from('equipment_transfers').insert({
+    equipment_id:   item.id,
+    equipment_name: item.name,
+    category:       item.category,
+    from_site: from, to_site: to, quantity: qty,
+    transferred_by: adminCurrentUser.id,
+    foreman_name:   profile.data?.full_name || 'Admin',
+    notes
+  });
+
+  document.getElementById('transferModal').style.display = 'none';
+  loadEquipment();
+}
+
+function openAddEquipmentModal() {
+  document.getElementById('newEqName').value = '';
+  document.getElementById('addEquipmentModal').style.display = 'flex';
+}
+function closeAddEquipmentModal(e) {
+  if (!e || e.target === document.getElementById('addEquipmentModal'))
+    document.getElementById('addEquipmentModal').style.display = 'none';
+}
+async function confirmAddEquipment() {
+  const cat  = document.getElementById('newEqCategory').value;
+  const name = document.getElementById('newEqName').value.trim();
+  if (!name) { alert('Enter an item name.'); return; }
+
+  const { error } = await sbClient.from('equipment').insert({ category: cat, name });
+  if (error) { alert('Error: ' + error.message); return; }
+  document.getElementById('addEquipmentModal').style.display = 'none';
+  loadEquipment();
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

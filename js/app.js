@@ -195,6 +195,7 @@ async function startSpecificFormFlow(type) {
 function handleDashAction(action) {
   switch (action) {
     case 'delivery':   return openDeliveryModal();
+    case 'equipment':  return openEquipmentOverlay();
     case 'documents':  return openDocumentPicker();
     case 'admin':      return openAdminPanel();
   }
