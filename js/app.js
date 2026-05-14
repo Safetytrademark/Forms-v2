@@ -1856,6 +1856,9 @@ function validateStep(step) {
   }
 
   if (step === 3) {
+    // Site Photos has its own validation inside handleSitePhotosUpload()
+    if (state.submissionType === 'Site Photos Only') return true;
+
     const fields = FORM_FIELDS[state.submissionType] || [];
     for (const field of fields) {
       if (!field.required) continue;

@@ -240,6 +240,8 @@ async function loadDocuments() {
   const filterSel = document.getElementById('docFilterSelect');
   if (!wrap) return;
 
+  wrap.innerHTML = '<div class="admin-loading">Loading…</div>';
+
   let query = sbClient
     .from('documents')
     .select('id, title, type, file_name, file_url, created_at, project_id, projects(name)')
@@ -256,30 +258,73 @@ async function loadDocuments() {
     return;
   }
 
-  const typeLabel = {
-    change_order: 'Change Order', drawing: 'Drawing',
-    rfi: 'RFI', submittal: 'Submittal', specification: 'Specification',
-    general: 'Document', site_photo: 'Site Photo'
-  };
-  const typeIcon = {
-    change_order: '📋', drawing: '📐',
-    rfi: '🔄', submittal: '📩', specification: '📑',
-    general: '📄', site_photo: '📸'
-  };
+  // Define sections in display order
+  const SECTIONS = [
+    { key: 'site_photo',    label: 'Site Photos',    icon: '📸', isPhotos: true  },
+    { key: 'change_order',  label: 'Change Orders',  icon: '📋', isPhotos: false },
+    { key: 'rfi',           label: 'RFIs',           icon: '🔄', isPhotos: false },
+    { key: 'drawing',       label: 'Drawings',       icon: '📐', isPhotos: false },
+    { key: 'submittal',     label: 'Submittals',     icon: '📩', isPhotos: false },
+    { key: 'specification', label: 'Specifications', icon: '📑', isPhotos: false },
+    { key: 'general',       label: 'General',        icon: '📄', isPhotos: false },
+  ];
 
-  wrap.innerHTML = docs.map(d => `
-    <div class="admin-table-row">
-      <span class="doc-icon" style="font-size:22px;flex-shrink:0">${typeIcon[d.type] || '📄'}</span>
-      <div class="admin-table-cell">
-        <div class="admin-cell-name">${esc(d.title)}</div>
-        <div class="admin-cell-meta">
-          ${esc(d.projects?.name || '')} · ${typeLabel[d.type] || 'Document'} · ${formatDate(d.created_at)}
-        </div>
-      </div>
-      <a class="admin-btn-icon" href="${d.file_url}" target="_blank" rel="noopener" style="text-decoration:none">↗ Open</a>
-      <button class="admin-btn-danger" onclick="deleteDocument('${d.id}', '${esc(d.file_name || '')}')">🗑</button>
-    </div>
-  `).join('');
+  // Group docs by type
+  const byType = {};
+  for (const d of docs) {
+    const k = d.type || 'general';
+    if (!byType[k]) byType[k] = [];
+    byType[k].push(d);
+  }
+
+  let html = '';
+  for (const sec of SECTIONS) {
+    const items = byType[sec.key];
+    if (!items?.length) continue;
+
+    html += `<div class="doc-section">
+      <div class="doc-section-hdr">
+        <span class="doc-section-icon">${sec.icon}</span>
+        <span class="doc-section-title">${sec.label}</span>
+        <span class="doc-section-count">${items.length}</span>
+      </div>`;
+
+    if (sec.isPhotos) {
+      // Photo grid
+      html += `<div class="doc-photo-grid">`;
+      for (const d of items) {
+        html += `
+          <div class="doc-photo-card">
+            <a href="${d.file_url}" target="_blank" rel="noopener" class="doc-photo-thumb-wrap">
+              <img class="doc-photo-thumb" src="${d.file_url}" alt="${esc(d.title)}" loading="lazy">
+            </a>
+            <div class="doc-photo-info">
+              <div class="doc-photo-title" title="${esc(d.title)}">${esc(d.title)}</div>
+              <div class="doc-photo-meta">${esc(d.projects?.name || '')} · ${formatDate(d.created_at)}</div>
+            </div>
+            <button class="doc-photo-del" onclick="deleteDocument('${d.id}','${esc(d.file_name||'')}')" title="Delete">🗑</button>
+          </div>`;
+      }
+      html += `</div>`;
+    } else {
+      // List rows
+      for (const d of items) {
+        html += `
+          <div class="doc-row">
+            <div class="doc-row-info">
+              <div class="doc-row-title">${esc(d.title)}</div>
+              <div class="doc-row-meta">${esc(d.projects?.name || '')} · ${formatDate(d.created_at)}</div>
+            </div>
+            <a class="admin-btn-icon" href="${d.file_url}" target="_blank" rel="noopener" style="text-decoration:none">↗ Open</a>
+            <button class="admin-btn-danger" onclick="deleteDocument('${d.id}','${esc(d.file_name||'')}')">🗑</button>
+          </div>`;
+      }
+    }
+
+    html += `</div>`; // .doc-section
+  }
+
+  wrap.innerHTML = html || '<div class="admin-empty">No documents uploaded yet.</div>';
 }
 
 async function uploadDocument() {
