@@ -465,6 +465,10 @@ function renderStep2() {
 
 // ── Step 3: Form ──────────────────────────────────────────────────────────────
 function renderStep3() {
+  // Always restore the standard photo section first (may have been hidden by Site Photos flow)
+  const _ps = document.querySelector('.photo-section');
+  if (_ps) _ps.style.display = '';
+
   // Site Photos has its own simplified flow — bypass the generic form builder
   if (state.submissionType === 'Site Photos Only') {
     renderSitePhotosStep();
@@ -2026,30 +2030,31 @@ function renderSitePhotosStep() {
   const container = document.getElementById('dynamicFields');
   if (!container) return;
 
+  // Hide the standard photo-section (always present in step 3 HTML)
+  const photoSection = document.querySelector('.photo-section');
+  if (photoSection) photoSection.style.display = 'none';
+
   // Release any previous object URLs
   _spPhotos.forEach(p => URL.revokeObjectURL(p.objectUrl));
   _spPhotos = [];
 
   container.innerHTML = `
-    <div class="field-group">
-      <label class="field-label">General notes <span style="font-weight:400;opacity:.6">(optional)</span></label>
-      <textarea id="spNotes" class="field-textarea" rows="3"
-        placeholder="What are these photos documenting? Which area or section of the site?"></textarea>
-    </div>
     <div id="spPhotoList" class="sp-photo-list"></div>
-    <div class="sp-add-wrap">
-      <button type="button" class="sp-add-btn" onclick="document.getElementById('spFileInput').click()">
-        📸 Add Photo
-      </button>
+    <div class="sp-add-row">
+      <button type="button" class="sp-cam-btn" onclick="document.getElementById('spFileInput').click()">📷</button>
+      <input id="spCapInput" type="text" class="sp-cap-input" placeholder="Add a caption, then tap 📷 to add photo…">
       <input type="file" id="spFileInput" accept="image/*" multiple hidden>
     </div>
   `;
 
   document.getElementById('spFileInput').addEventListener('change', e => {
+    const caption = (document.getElementById('spCapInput')?.value || '').trim();
     Array.from(e.target.files)
       .filter(f => f.type.startsWith('image/'))
-      .forEach(f => _spPhotos.push({ file: f, caption: '', objectUrl: URL.createObjectURL(f) }));
+      .forEach(f => _spPhotos.push({ file: f, caption, objectUrl: URL.createObjectURL(f) }));
     e.target.value = '';
+    const capEl = document.getElementById('spCapInput');
+    if (capEl) capEl.value = '';
     _renderSpList();
   });
 
@@ -2060,7 +2065,7 @@ function _renderSpList() {
   const list = document.getElementById('spPhotoList');
   if (!list) return;
   if (_spPhotos.length === 0) {
-    list.innerHTML = '<p class="sp-empty">No photos yet — tap "Add Photo" to get started.</p>';
+    list.innerHTML = '<p class="sp-empty">No photos yet — type a caption and tap 📷 to add.</p>';
     return;
   }
   list.innerHTML = _spPhotos.map((p, i) => `
@@ -2102,7 +2107,6 @@ async function handleSitePhotosUpload() {
     if (!project) throw new Error('Project not found — go back and re-select.');
 
     const date = new Date().toISOString().split('T')[0];
-    const generalNotes = (document.getElementById('spNotes')?.value || '').trim();
     let uploaded = 0;
 
     for (const p of _spPhotos) {
@@ -2120,7 +2124,7 @@ async function handleSitePhotosUpload() {
         .from('project-documents')
         .createSignedUrl(storagePath, 60 * 60 * 24 * 365 * 3); // 3 years
 
-      const title = p.caption.trim() || generalNotes.slice(0, 100) || 'Site Photo';
+      const title = p.caption.trim() || 'Site Photo';
       await sbClient.from('documents').insert({
         project_id:  project.id,
         title,
