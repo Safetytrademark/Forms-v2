@@ -23,26 +23,43 @@
   </div>
   <div class="admin-header-right">
     <span class="admin-user" id="adminUserLabel"></span>
-    <button class="admin-back-btn" onclick="window.location.href='calendar.html'">📅 Calendar</button>
     <button class="admin-back-btn" onclick="window.location.href='index.html'">← App</button>
     <button class="admin-logout-btn" onclick="adminLogout()">Sign Out</button>
   </div>
 </header>
 
-<!-- ── Tab Nav ──────────────────────────────────────────────────────────── -->
-<div class="admin-tabs">
-  <button class="admin-tab active" data-tab="foremans"    onclick="switchTab('foremans')">👷 Foremans</button>
-  <button class="admin-tab" data-tab="projects"           onclick="switchTab('projects')">🏗️ Projects</button>
-  <button class="admin-tab" data-tab="documents"          onclick="switchTab('documents')">📄 Documents</button>
-  <button class="admin-tab" data-tab="deliveries"         onclick="switchTab('deliveries')">📦 Deliveries</button>
-  <button class="admin-tab" data-tab="by-project"         onclick="switchTab('by-project')">📊 By Project</button>
-  <button class="admin-tab" data-tab="submissions"        onclick="switchTab('submissions')">📋 Submissions</button>
-  <div class="admin-tab-divider"></div>
-  <button class="admin-tab" data-tab="tm-equipment"       onclick="switchTab('tm-equipment')">🔧 TM Equipment</button>
-  <button class="admin-tab" data-tab="rental"             onclick="switchTab('rental')">🏗 Rental Scaffold</button>
-  <div class="admin-tab-divider"></div>
-  <button class="admin-tab admin-tab-link" onclick="window.open('calendar.html','_blank')">📅 Calendar ↗</button>
-</div>
+<!-- ── Nav Grid ─────────────────────────────────────────────────────────── -->
+<nav class="admin-nav-wrap">
+  <div class="admin-nav-grid">
+    <button class="admin-tab active" data-tab="foremans"  onclick="switchTab('foremans')">
+      <span class="anav-icon">👷</span><span class="anav-lbl">Foremans</span>
+    </button>
+    <button class="admin-tab" data-tab="projects"         onclick="switchTab('projects')">
+      <span class="anav-icon">🏗️</span><span class="anav-lbl">Projects</span>
+    </button>
+    <button class="admin-tab" data-tab="documents"        onclick="switchTab('documents')">
+      <span class="anav-icon">📄</span><span class="anav-lbl">Documents</span>
+    </button>
+    <button class="admin-tab" data-tab="deliveries"       onclick="switchTab('deliveries')">
+      <span class="anav-icon">📦</span><span class="anav-lbl">Deliveries</span>
+    </button>
+    <button class="admin-tab" data-tab="by-project"       onclick="switchTab('by-project')">
+      <span class="anav-icon">📊</span><span class="anav-lbl">By Project</span>
+    </button>
+    <button class="admin-tab" data-tab="submissions"      onclick="switchTab('submissions')">
+      <span class="anav-icon">📋</span><span class="anav-lbl">Submissions</span>
+    </button>
+    <button class="admin-tab" data-tab="tm-equipment"     onclick="switchTab('tm-equipment')">
+      <span class="anav-icon">🔧</span><span class="anav-lbl">TM Equipment</span>
+    </button>
+    <button class="admin-tab" data-tab="rental"           onclick="switchTab('rental')">
+      <span class="anav-icon">🏗</span><span class="anav-lbl">Rental Scaffold</span>
+    </button>
+    <button class="admin-tab admin-tab-link"              onclick="window.open('calendar.html','_blank')">
+      <span class="anav-icon">📅</span><span class="anav-lbl">Calendar ↗</span>
+    </button>
+  </div>
+</nav>
 
 <!-- ── Main Content ──────────────────────────────────────────────────────── -->
 <main class="admin-main">
