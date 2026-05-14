@@ -347,6 +347,8 @@ function attachNavListeners() {
   });
   document.getElementById('btnNext').addEventListener('click', async () => {
     if (!validateStep(state.currentStep)) return;
+    // Site Photos submits directly from step 3 (no PDF, no step 4)
+    if (state.submissionType === 'Site Photos Only' && state.currentStep === 3) { handleSubmit(); return; }
     if (state.currentStep === 4) { handleSubmit(); return; }
 
     // For draftable forms, pre-load draft before rendering step 3
@@ -386,8 +388,11 @@ function updateNavButtons(step) {
   const next = document.getElementById('btnNext');
   back.style.visibility = 'visible';
   back.textContent = step === 1 ? '← Home' : '← Back';
-  next.textContent = step === 4 ? '✓ Submit' : 'Next →';
-  next.className = step === 4 ? 'btn btn-submit' : 'btn btn-next';
+  const isSitePhotosSubmit = (step === 3 && state.submissionType === 'Site Photos Only');
+  const isSubmitStep = step === 4 || isSitePhotosSubmit;
+  next.textContent = isSubmitStep ? '📤 Upload Photos' : 'Next →';
+  next.className   = isSubmitStep ? 'btn btn-submit' : 'btn btn-next';
+  next.style.display = '';
 }
 
 // ── Step Rendering ───────────────────────────────────────────────────────────
@@ -460,6 +465,12 @@ function renderStep2() {
 
 // ── Step 3: Form ──────────────────────────────────────────────────────────────
 function renderStep3() {
+  // Site Photos has its own simplified flow — bypass the generic form builder
+  if (state.submissionType === 'Site Photos Only') {
+    renderSitePhotosStep();
+    return;
+  }
+
   const titleEl = document.getElementById('formTypeTitle');
   const typeInfo = SUBMISSION_TYPES.find(t => t.id === state.submissionType);
   if (titleEl) titleEl.textContent = `${typeInfo?.icon || ''} ${state.submissionType}`;
@@ -2003,8 +2014,163 @@ async function clearDraftAndReset() {
   showToast('Draft cleared.', 'info');
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+//  SITE PHOTOS — dedicated lightweight flow (no PDF, direct to Storage)
+// ══════════════════════════════════════════════════════════════════════════════
+let _spPhotos = []; // [{file, caption, objectUrl}]
+
+function renderSitePhotosStep() {
+  const titleEl = document.getElementById('formTypeTitle');
+  if (titleEl) titleEl.textContent = '📸 Site Photos';
+
+  const container = document.getElementById('dynamicFields');
+  if (!container) return;
+
+  // Release any previous object URLs
+  _spPhotos.forEach(p => URL.revokeObjectURL(p.objectUrl));
+  _spPhotos = [];
+
+  container.innerHTML = `
+    <div class="field-group">
+      <label class="field-label">General notes <span style="font-weight:400;opacity:.6">(optional)</span></label>
+      <textarea id="spNotes" class="field-textarea" rows="3"
+        placeholder="What are these photos documenting? Which area or section of the site?"></textarea>
+    </div>
+    <div id="spPhotoList" class="sp-photo-list"></div>
+    <div class="sp-add-wrap">
+      <button type="button" class="sp-add-btn" onclick="document.getElementById('spFileInput').click()">
+        📸 Add Photo
+      </button>
+      <input type="file" id="spFileInput" accept="image/*" multiple hidden>
+    </div>
+  `;
+
+  document.getElementById('spFileInput').addEventListener('change', e => {
+    Array.from(e.target.files)
+      .filter(f => f.type.startsWith('image/'))
+      .forEach(f => _spPhotos.push({ file: f, caption: '', objectUrl: URL.createObjectURL(f) }));
+    e.target.value = '';
+    _renderSpList();
+  });
+
+  _renderSpList();
+}
+
+function _renderSpList() {
+  const list = document.getElementById('spPhotoList');
+  if (!list) return;
+  if (_spPhotos.length === 0) {
+    list.innerHTML = '<p class="sp-empty">No photos yet — tap "Add Photo" to get started.</p>';
+    return;
+  }
+  list.innerHTML = _spPhotos.map((p, i) => `
+    <div class="sp-photo-item">
+      <div class="sp-thumb-wrap">
+        <img class="sp-thumb" src="${p.objectUrl}" alt="">
+        <button type="button" class="sp-remove" onclick="spRemovePhoto(${i})">×</button>
+      </div>
+      <input class="sp-caption field-input" type="text"
+        placeholder="Caption for this photo (optional)"
+        value="${(p.caption||'').replace(/"/g,'&quot;')}"
+        oninput="_spPhotos[${i}].caption = this.value">
+    </div>
+  `).join('');
+}
+
+function spRemovePhoto(i) {
+  URL.revokeObjectURL(_spPhotos[i].objectUrl);
+  _spPhotos.splice(i, 1);
+  _renderSpList();
+}
+
+async function handleSitePhotosUpload() {
+  const btn   = document.getElementById('btnNext');
+  const errEl = document.getElementById('globalError');
+
+  if (_spPhotos.length === 0) {
+    showToast('Add at least one photo before uploading.', 'warning');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Uploading…';
+  if (errEl) errEl.hidden = true;
+
+  try {
+    const { data: project } = await sbClient.from('projects')
+      .select('id').eq('name', state.project).single();
+    if (!project) throw new Error('Project not found — go back and re-select.');
+
+    const date = new Date().toISOString().split('T')[0];
+    const generalNotes = (document.getElementById('spNotes')?.value || '').trim();
+    let uploaded = 0;
+
+    for (const p of _spPhotos) {
+      const ext      = p.file.name.split('.').pop() || 'jpg';
+      const safeName = `${date}_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+      const storagePath = `${project.id}/site-photos/${safeName}`;
+
+      const { error: upErr } = await sbClient.storage
+        .from('project-documents')
+        .upload(storagePath, p.file, { contentType: p.file.type, upsert: false });
+
+      if (upErr) { console.warn('Photo upload skipped:', p.file.name, upErr.message); continue; }
+
+      const { data: urlData } = await sbClient.storage
+        .from('project-documents')
+        .createSignedUrl(storagePath, 60 * 60 * 24 * 365 * 3); // 3 years
+
+      const title = p.caption.trim() || generalNotes.slice(0, 100) || 'Site Photo';
+      await sbClient.from('documents').insert({
+        project_id:  project.id,
+        title,
+        type:        'site_photo',
+        file_name:   p.file.name,
+        file_url:    urlData?.signedUrl || '',
+        uploaded_by: window.currentUser?.id
+      });
+      uploaded++;
+    }
+
+    // Log submission
+    try {
+      await sbClient.from('submissions').insert({
+        foreman_id:      window.currentUser.id,
+        foreman_name:    window.currentProfile?.full_name || '',
+        project_name:    state.project,
+        submission_type: 'Site Photos Only'
+      });
+    } catch (_) {}
+
+    // Show success in place
+    const container = document.getElementById('dynamicFields');
+    if (container) {
+      container.innerHTML = `
+        <div class="success-screen">
+          <div class="success-icon">✅</div>
+          <h2 class="success-title">${uploaded} Photo${uploaded !== 1 ? 's' : ''} Uploaded!</h2>
+          <p class="success-msg">Saved to Site Documentation for <strong>${state.project}</strong>.</p>
+          <button class="btn btn-next" onclick="resetApp()" style="margin-top:24px;width:100%">+ New Submission</button>
+        </div>`;
+    }
+    btn.style.display = 'none';
+    document.getElementById('btnBack').style.display = 'none';
+
+  } catch (err) {
+    console.error(err);
+    btn.disabled = false;
+    btn.textContent = '📤 Upload Photos';
+    showGlobalError('Upload failed: ' + err.message);
+  }
+}
+
 // ── Submit ────────────────────────────────────────────────────────────────────
 async function handleSubmit() {
+  // Site Photos uses its own upload flow (no PDF, no email)
+  if (state.submissionType === 'Site Photos Only') {
+    await handleSitePhotosUpload();
+    return;
+  }
   const btn = document.getElementById('btnNext');
   btn.disabled = true;
   btn.textContent = 'Generating PDF...';

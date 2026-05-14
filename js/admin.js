@@ -258,11 +258,13 @@ async function loadDocuments() {
 
   const typeLabel = {
     change_order: 'Change Order', drawing: 'Drawing',
-    rfi: 'RFI', submittal: 'Submittal', specification: 'Specification', general: 'Document'
+    rfi: 'RFI', submittal: 'Submittal', specification: 'Specification',
+    general: 'Document', site_photo: 'Site Photo'
   };
   const typeIcon = {
     change_order: '📋', drawing: '📐',
-    rfi: '🔄', submittal: '📩', specification: '📑', general: '📄'
+    rfi: '🔄', submittal: '📩', specification: '📑',
+    general: '📄', site_photo: '📸'
   };
 
   wrap.innerHTML = docs.map(d => `
