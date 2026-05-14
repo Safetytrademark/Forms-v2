@@ -667,11 +667,46 @@ body { min-height: 100dvh; }
 /* ── Equipment Tab ────────────────────────────────────────────────────────── */
 .eq-toolbar {
   display: flex;
-  gap: 12px;
-  padding: 16px 20px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+
+/* Site chip multi-filter */
+.eq-site-chips {
+  display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  gap: 6px;
+}
+
+.eq-chip-all,
+.eq-chip-site {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 4px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-flat);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+.eq-chip-all:hover,
+.eq-chip-site:hover { border-color: var(--accent); color: var(--accent); }
+
+.eq-chip-all.active {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.eq-chip-site.active {
+  background: rgba(245,158,11,0.12);
+  border-color: rgba(245,158,11,0.5);
+  color: var(--accent, #f59e0b);
 }
 
 /* ── Equipment section grouping ─────────────────────────────────────────── */

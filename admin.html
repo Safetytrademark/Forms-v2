@@ -231,14 +231,23 @@
       <p class="admin-section-sub">Trademark-owned tools and equipment tracked by site.</p>
     </div>
     <div class="eq-toolbar">
-      <select id="tmSiteFilter" onchange="loadTMEquipment()" class="admin-select">
-        <option value="">All Sites</option>
-        <option>CENTRA</option><option>DRAKE</option><option>WLAND</option>
-        <option>ALBERNI</option><option>B-5/6</option><option>COLUMBIA</option>
-        <option>B-7</option><option>IPL33</option><option>ARBUTUS</option>
-        <option>REIGN</option><option>B-P3</option><option>FHALL</option>
-        <option>FRASER</option><option>YARD</option>
-      </select>
+      <div class="eq-site-chips" id="tmSiteFilter">
+        <button class="eq-chip-all active" onclick="toggleAllSites('tmSiteFilter',loadTMEquipment)">All</button>
+        <button class="eq-chip-site" data-site="CENTRA"   onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">CENTRA</button>
+        <button class="eq-chip-site" data-site="DRAKE"    onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">DRAKE</button>
+        <button class="eq-chip-site" data-site="WLAND"    onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">WLAND</button>
+        <button class="eq-chip-site" data-site="ALBERNI"  onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">ALBERNI</button>
+        <button class="eq-chip-site" data-site="B-5/6"    onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">B-5/6</button>
+        <button class="eq-chip-site" data-site="COLUMBIA" onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">COLUMBIA</button>
+        <button class="eq-chip-site" data-site="B-7"      onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">B-7</button>
+        <button class="eq-chip-site" data-site="IPL33"    onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">IPL33</button>
+        <button class="eq-chip-site" data-site="ARBUTUS"  onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">ARBUTUS</button>
+        <button class="eq-chip-site" data-site="REIGN"    onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">REIGN</button>
+        <button class="eq-chip-site" data-site="B-P3"     onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">B-P3</button>
+        <button class="eq-chip-site" data-site="FHALL"    onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">FHALL</button>
+        <button class="eq-chip-site" data-site="FRASER"   onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">FRASER</button>
+        <button class="eq-chip-site" data-site="YARD"     onclick="toggleSiteChip(this,'tmSiteFilter',loadTMEquipment)">YARD</button>
+      </div>
       <button class="admin-btn-primary" onclick="openAddEquipmentModal('TM Equipment')">+ Add Item</button>
     </div>
     <div id="tmEquipList" class="admin-table-wrap">
@@ -259,14 +268,23 @@
       <p class="admin-section-sub">Rental scaffold inventory tracked by site.</p>
     </div>
     <div class="eq-toolbar">
-      <select id="rentalSiteFilter" onchange="loadRentalEquipment()" class="admin-select">
-        <option value="">All Sites</option>
-        <option>CENTRA</option><option>DRAKE</option><option>WLAND</option>
-        <option>ALBERNI</option><option>B-5/6</option><option>COLUMBIA</option>
-        <option>B-7</option><option>IPL33</option><option>ARBUTUS</option>
-        <option>REIGN</option><option>B-P3</option><option>FHALL</option>
-        <option>FRASER</option><option>YARD</option>
-      </select>
+      <div class="eq-site-chips" id="rentalSiteFilter">
+        <button class="eq-chip-all active" onclick="toggleAllSites('rentalSiteFilter',loadRentalEquipment)">All</button>
+        <button class="eq-chip-site" data-site="CENTRA"   onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">CENTRA</button>
+        <button class="eq-chip-site" data-site="DRAKE"    onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">DRAKE</button>
+        <button class="eq-chip-site" data-site="WLAND"    onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">WLAND</button>
+        <button class="eq-chip-site" data-site="ALBERNI"  onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">ALBERNI</button>
+        <button class="eq-chip-site" data-site="B-5/6"    onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">B-5/6</button>
+        <button class="eq-chip-site" data-site="COLUMBIA" onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">COLUMBIA</button>
+        <button class="eq-chip-site" data-site="B-7"      onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">B-7</button>
+        <button class="eq-chip-site" data-site="IPL33"    onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">IPL33</button>
+        <button class="eq-chip-site" data-site="ARBUTUS"  onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">ARBUTUS</button>
+        <button class="eq-chip-site" data-site="REIGN"    onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">REIGN</button>
+        <button class="eq-chip-site" data-site="B-P3"     onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">B-P3</button>
+        <button class="eq-chip-site" data-site="FHALL"    onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">FHALL</button>
+        <button class="eq-chip-site" data-site="FRASER"   onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">FRASER</button>
+        <button class="eq-chip-site" data-site="YARD"     onclick="toggleSiteChip(this,'rentalSiteFilter',loadRentalEquipment)">YARD</button>
+      </div>
       <button class="admin-btn-primary" onclick="openAddEquipmentModal('Rental')">+ Add Item</button>
     </div>
     <div id="rentalEquipList" class="admin-table-wrap">

@@ -747,12 +747,36 @@ async function _renderTransferHistory(histId) {
     : '<div class="admin-empty">No transfers yet.</div>';
 }
 
+// ── Site chip filter helpers ──────────────────────────────────────────────────
+function getActiveSites(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return EQ_SITES;
+  const selected = [...container.querySelectorAll('.eq-chip-site.active')]
+    .map(el => el.dataset.site);
+  return selected.length > 0 ? selected : EQ_SITES;
+}
+
+function toggleSiteChip(chip, containerId, reloadFn) {
+  chip.classList.toggle('active');
+  // Deactivate "All" whenever any site is selected
+  const container = document.getElementById(containerId);
+  const anyActive = container.querySelectorAll('.eq-chip-site.active').length > 0;
+  container.querySelector('.eq-chip-all')?.classList.toggle('active', !anyActive);
+  reloadFn();
+}
+
+function toggleAllSites(containerId, reloadFn) {
+  const container = document.getElementById(containerId);
+  container.querySelectorAll('.eq-chip-site').forEach(c => c.classList.remove('active'));
+  container.querySelector('.eq-chip-all')?.classList.add('active');
+  reloadFn();
+}
+
 // ── Core section loader ────────────────────────────────────────────────────────
 async function _loadEquipSection(section, siteFilterId, listId, histId) {
   const listWrap = document.getElementById(listId);
   if (!listWrap) return;
 
-  const siteFilter = document.getElementById(siteFilterId)?.value;
   listWrap.innerHTML = '<div class="admin-loading">Loading…</div>';
 
   const { data: items, error } = await sbClient.from('equipment')
@@ -763,7 +787,7 @@ async function _loadEquipSection(section, siteFilterId, listId, histId) {
   if (error || !items?.length) {
     listWrap.innerHTML = '<div class="admin-empty">No items found.</div>';
   } else {
-    const activeSites = siteFilter ? [siteFilter] : EQ_SITES;
+    const activeSites = getActiveSites(siteFilterId);
     const grouped = {};
     items.forEach(item => {
       if (!grouped[item.category]) grouped[item.category] = [];
