@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0a0a0a">
+  <link rel="manifest" href="/manifest.json">
   <title>Admin Panel — Trademark Safety</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -454,7 +455,29 @@
   </div>
 </div>
 
+<!-- ── Crew Roster Modal ──────────────────────────────────────────────────── -->
+<div id="crewModal" class="admin-modal-overlay" style="display:none" onclick="closeCrewModal(event)">
+  <div class="admin-modal" style="max-width:480px">
+    <div class="admin-modal-header">
+      <span id="crewModalTitle">👷 Crew Roster</span>
+      <button class="docs-drawer-close" onclick="closeCrewModal()">✕</button>
+    </div>
+    <div class="admin-modal-body" id="crewModalBody">
+      <div class="admin-loading">Loading…</div>
+    </div>
+    <div class="admin-modal-footer" style="flex-direction:column;align-items:stretch;gap:10px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="crewWorkerName"  class="admin-input" type="text" placeholder="Worker name" style="flex:1">
+        <input id="crewWorkerTrade" class="admin-input" type="text" placeholder="Trade (opt.)" style="width:130px">
+        <button class="admin-btn-primary" onclick="addCrewMember()">+ Add</button>
+      </div>
+      <button class="admin-btn-ghost" onclick="closeCrewModal()">Done</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/supabase-client.js"></script>
+<script src="js/push.js"></script>
 <script src="js/chat.js"></script>
 <script src="js/admin.js"></script>
 </body>

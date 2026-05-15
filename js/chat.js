@@ -42,6 +42,7 @@ async function openChatPage() {
   _subscribeToChat('chatMessages');
   _markChatRead(_chatProjectId);
   _scrollChatToBottom('chatMessages');
+  if (typeof requestChatNotificationPermission === 'function') requestChatNotificationPermission();
 }
 
 function closeChatPage() {
@@ -67,6 +68,7 @@ async function openAdminChat(projectId, projectName) {
   _subscribeToChat('adminChatMessages');
   _markChatRead(projectId);
   _scrollChatToBottom('adminChatMessages');
+  if (typeof requestChatNotificationPermission === 'function') requestChatNotificationPermission();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -239,6 +241,13 @@ function _subscribeToChat(containerId) {
 
         wrap.insertAdjacentHTML('beforeend', _renderBubble(payload.new));
         _scrollChatToBottom(containerId);
+
+        // Notify if message is from someone else and tab is in background
+        const myId = window.currentUser?.id || window.adminCurrentUser?.id;
+        if (payload.new.sender_id !== myId) {
+          if (typeof requestChatNotificationPermission === 'function') requestChatNotificationPermission();
+          if (typeof showChatNotification === 'function') showChatNotification(payload.new, _chatProjectName);
+        }
       }
     )
     .subscribe();

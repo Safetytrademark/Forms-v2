@@ -1,0 +1,12 @@
+{
+  "name": "Trademark Safety",
+  "short_name": "TM Safety",
+  "description": "Construction field safety platform by Trademark Masonry",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0b0e",
+  "theme_color": "#c0272d",
+  "icons": [
+    { "src": "assets/TradeMarkMas-Colour-RGB-Lrg.png", "sizes": "any", "type": "image/png" }
+  ]
+}

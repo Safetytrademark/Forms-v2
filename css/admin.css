@@ -1122,3 +1122,40 @@ body { min-height: 100dvh; }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ── Small action button (project row) ───────────────────────────────────── */
+.admin-btn-sm {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font);
+  color: var(--text-muted);
+  background: var(--surface-2, #1d1f26);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.admin-btn-sm:hover { background: var(--border); color: var(--text); }
+
+/* ── Crew modal rows ─────────────────────────────────────────────────────── */
+.crew-modal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.crew-modal-row:last-child { border-bottom: none; }
+.crew-modal-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.crew-modal-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.crew-modal-trade {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--surface-2, #1d1f26);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 2px 8px;
+}

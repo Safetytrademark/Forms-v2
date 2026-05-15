@@ -33,6 +33,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const lbl = document.getElementById('adminUserLabel');
   if (lbl) lbl.textContent = profile.full_name || adminCurrentUser.email;
 
+  // Register service worker for push notifications
+  if (typeof initNotifications === 'function') initNotifications();
+
   // Load all tabs
   await Promise.all([loadForemans(), loadProjects(), loadDocuments(), loadDeliveries(), loadByProject(), loadSubmissions(), loadTMEquipment(), loadRentalEquipment(), loadAdminChats()]);
 
@@ -210,6 +213,7 @@ async function loadProjects() {
         <div class="admin-cell-name">${esc(p.name)}</div>
         <div class="admin-cell-meta">Added ${formatDate(p.created_at)}</div>
       </div>
+      <button class="admin-btn-sm" onclick="openCrewModal('${p.id}','${esc(p.name).replace(/'/g,"\\'")}')">👷 Crew</button>
       <span class="admin-badge ${p.status === 'active' ? 'admin-badge-active' : 'admin-badge-inactive'}">
         ${p.status}
       </span>
@@ -264,6 +268,82 @@ async function toggleProject(projectId, active) {
   const status = active ? 'active' : 'inactive';
   await sbClient.from('projects').update({ status }).eq('id', projectId);
   await loadProjects();
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  CREW ROSTER MODAL
+// ═════════════════════════════════════════════════════════════════════════════
+let _crewProjectId   = null;
+let _crewProjectName = '';
+
+async function openCrewModal(projectId, projectName) {
+  _crewProjectId   = projectId;
+  _crewProjectName = projectName;
+  document.getElementById('crewModalTitle').textContent = `👷 Crew — ${projectName}`;
+  document.getElementById('crewWorkerName').value  = '';
+  document.getElementById('crewWorkerTrade').value = '';
+  document.getElementById('crewModal').style.display = 'flex';
+  await _loadCrewModalBody();
+}
+
+function closeCrewModal(e) {
+  if (e && e.target !== document.getElementById('crewModal')) return;
+  document.getElementById('crewModal').style.display = 'none';
+  _crewProjectId   = null;
+  _crewProjectName = '';
+}
+
+async function _loadCrewModalBody() {
+  const body = document.getElementById('crewModalBody');
+  if (!body || !_crewProjectId) return;
+  body.innerHTML = '<div class="admin-loading">Loading…</div>';
+
+  const { data: crew, error } = await sbClient
+    .from('project_crew')
+    .select('id, worker_name, trade')
+    .eq('project_id', _crewProjectId)
+    .eq('active', true)
+    .order('worker_name');
+
+  if (error || !crew?.length) {
+    body.innerHTML = '<div class="admin-empty" style="padding:20px;font-size:13px;color:var(--text-muted)">No crew members yet. Add one below.</div>';
+    return;
+  }
+
+  body.innerHTML = crew.map(w => `
+    <div class="crew-modal-row" id="crew-row-${w.id}">
+      <div class="crew-modal-info">
+        <span class="crew-modal-name">${esc(w.worker_name)}</span>
+        ${w.trade ? `<span class="crew-modal-trade">${esc(w.trade)}</span>` : ''}
+      </div>
+      <button class="admin-btn-danger" style="padding:4px 10px;font-size:12px" onclick="deleteCrewMember('${w.id}')">🗑</button>
+    </div>`).join('');
+}
+
+async function addCrewMember() {
+  const nameEl  = document.getElementById('crewWorkerName');
+  const tradeEl = document.getElementById('crewWorkerTrade');
+  const name    = (nameEl?.value || '').trim();
+  const trade   = (tradeEl?.value || '').trim() || null;
+  if (!name || !_crewProjectId) return;
+
+  const { error } = await sbClient.from('project_crew').insert({
+    project_id:  _crewProjectId,
+    worker_name: name,
+    trade
+  });
+
+  if (!error) {
+    nameEl.value  = '';
+    tradeEl.value = '';
+    nameEl.focus();
+    await _loadCrewModalBody();
+  }
+}
+
+async function deleteCrewMember(crewId) {
+  await sbClient.from('project_crew').delete().eq('id', crewId);
+  await _loadCrewModalBody();
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

@@ -60,6 +60,7 @@ async function onAuthSuccess(user) {
   // Start the main app
   showApp();
   initializeApp();   // defined in app.js
+  if (typeof initNotifications === 'function') initNotifications();
 }
 
 // ── Project loading ───────────────────────────────────────────────────────────

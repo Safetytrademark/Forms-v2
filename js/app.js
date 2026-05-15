@@ -1196,15 +1196,9 @@ function renderCrewSignin(field, container) {
   const body = document.createElement('div');
   body.className = 'section-body';
 
-  if (!state.fields[field.id] || state.fields[field.id].length === 0) {
-    state.fields[field.id] = [{ name: '', sig: null }];
-  }
-
   const rowsWrap = document.createElement('div');
   rowsWrap.id = 'crewRows';
   body.appendChild(rowsWrap);
-
-  state.fields[field.id].forEach((_, i) => renderCrewRow(rowsWrap, i));
 
   const addBtn = document.createElement('button');
   addBtn.type = 'button';
@@ -1216,6 +1210,37 @@ function renderCrewSignin(field, container) {
   });
   body.appendChild(addBtn);
   container.appendChild(body);
+
+  // Load roster asynchronously — renders once data arrives (non-blocking)
+  _loadCrewRoster(field.id, rowsWrap);
+}
+
+async function _loadCrewRoster(fieldId, rowsWrap) {
+  // Only pre-fill from DB if the list is empty (don't override existing/draft data)
+  if (!state.fields[fieldId] || state.fields[fieldId].length === 0) {
+    try {
+      const { data: projRow } = await sbClient
+        .from('projects').select('id').eq('name', state.project).single();
+      if (projRow) {
+        const { data: roster } = await sbClient
+          .from('project_crew')
+          .select('worker_name')
+          .eq('project_id', projRow.id)
+          .eq('active', true)
+          .order('worker_name');
+        if (roster?.length) {
+          state.fields[fieldId] = roster.map(w => ({ name: w.worker_name, sig: null }));
+        }
+      }
+    } catch (_) {}
+    if (!state.fields[fieldId]?.length) {
+      state.fields[fieldId] = [{ name: '', sig: null }];
+    }
+  }
+
+  // Render all rows now that data is ready
+  rowsWrap.innerHTML = '';
+  state.fields[fieldId].forEach((_, i) => renderCrewRow(rowsWrap, i));
 }
 
 function renderCrewRow(container, index) {
