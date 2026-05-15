@@ -44,7 +44,7 @@ html, body {
   justify-content: flex-end;
   padding: 48px 44px;
   overflow: hidden;
-  background: #0d0d10 url('../assets/tm-hero.png') center center / cover no-repeat;
+  background: #0d0d10 url('../assets/tm-hero.png') center 38% / cover no-repeat;
 }
 
 /* Dark gradient overlay — image visible at top, solid enough for text at bottom */
@@ -308,7 +308,7 @@ html, body {
     min-height: 220px;
     padding: 0;
     justify-content: flex-end;
-    background-position: center top;
+    background-position: center 20%;
   }
 
   .lp-hero-content { display: none; }
