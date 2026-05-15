@@ -177,26 +177,22 @@ async function submitDeliveryRequest() {
       showToast('📦 Delivery request sent!', 'success');
     }
 
-    // ── Email via Supabase Edge Function (server-side, no keys exposed) ───────
+    // ── SMS via Twilio Edge Function ─────────────────────────────────────────
     try {
       const foremanName = window.currentProfile?.full_name || 'Foreman';
-      fetch('https://aacrsnljubmmqqxfknzp.supabase.co/functions/v1/notify-delivery', {
+      fetch('https://aacrsnljubmmqqxfknzp.supabase.co/functions/v1/send-sms', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          record: {
-            project_id:     project.id,
-            foreman_id:     window.currentUser.id,
-            foreman_name:   foremanName,
-            project_name:   projName,
-            items,
-            notes:          notes || null,
-            needed_by:      neededBy || null,
-            needed_by_time: neededByTime || null
-          }
+          foreman_name:   foremanName,
+          project_name:   projName,
+          items,
+          notes:          notes || null,
+          needed_by:      neededBy || null,
+          needed_by_time: neededByTime || null
         })
       });
-    } catch (_) { /* best-effort */ }
+    } catch (_) { /* best-effort — SMS failure never blocks the user */ }
 
   } catch (err) {
     console.error('Delivery request failed:', err);
