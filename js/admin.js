@@ -629,13 +629,21 @@ function formatDeliveryItems(items) {
   const lines = [];
   const blockSizes = ['15cm', '20cm', '25cm', '30cm'];
   const blockTypes = {
-    standards_2h: 'Standards 2H',
-    bondbeams:    'Bondbeams',
-    halves:       'Halves',
-    multiblock:   'Multiblock',
-    squints:      'Squints',
-    block_lock:   'Block Lock Bundle',
-    wall_mesh:    'Wall Mesh'
+    standards_2h:     'Standards 2H',
+    bondbeams:        'Bondbeams',
+    halves:           'Halves',
+    multiblock:       'Multiblock',
+    block_lock:       'Block Lock Bundle',
+    wall_mesh:        'Wall Mesh'
+  };
+  const specialTypes = {
+    squints:           'Squints',
+    half_height:       'Half-Height Pallet',
+    slabs:             'Slabs',
+    dbl_bullnose_full: 'Dbl Bullnose Full',
+    dbl_bullnose_half: 'Dbl Bullnose Halves',
+    sgl_bullnose_full: 'Sgl Bullnose Full',
+    sgl_bullnose_half: 'Sgl Bullnose Halves'
   };
 
   blockSizes.forEach(size => {
@@ -646,6 +654,13 @@ function formatDeliveryItems(items) {
       );
     });
   });
+  if (items.special) {
+    Object.entries(items.special).forEach(([type, qty]) => {
+      if (qty > 0) lines.push(
+        `<div class="delivery-item-row"><span class="delivery-item-label">⭐ ${specialTypes[type] || type}</span><strong>${qty} pallets</strong></div>`
+      );
+    });
+  }
   if (items.mortar_tek > 0) lines.push(`<div class="delivery-item-row"><span class="delivery-item-label">Mortar Tek</span><strong>${items.mortar_tek} pallets</strong></div>`);
   if (items.blockfill   > 0) lines.push(`<div class="delivery-item-row"><span class="delivery-item-label">Blockfill</span><strong>${items.blockfill} pallets</strong></div>`);
   return lines.join('');
@@ -699,12 +714,21 @@ async function loadByProject() {
 
   // ── Aggregate totals across all requests ──────────────────────────────────
   const blockTypes = {
-    standards_2h: 'Standards 2H', bondbeams: 'Bondbeams',
-    halves: 'Halves', multiblock: 'Multiblock', squints: 'Squints',
-    block_lock: 'Block Lock Bundle', wall_mesh: 'Wall Mesh'
+    standards_2h:     'Standards 2H', bondbeams: 'Bondbeams',
+    halves:           'Halves',       multiblock: 'Multiblock',
+    block_lock:       'Block Lock Bundle', wall_mesh: 'Wall Mesh'
+  };
+  const specialTypes = {
+    squints:           'Squints',
+    half_height:       'Half-Height Pallet',
+    slabs:             'Slabs',
+    dbl_bullnose_full: 'Dbl Bullnose Full',
+    dbl_bullnose_half: 'Dbl Bullnose Halves',
+    sgl_bullnose_full: 'Sgl Bullnose Full',
+    sgl_bullnose_half: 'Sgl Bullnose Halves'
   };
   const sizes = ['15cm', '20cm', '25cm', '30cm'];
-  const totals = { '15cm': {}, '20cm': {}, '25cm': {}, '30cm': {}, mortar_tek: 0, blockfill: 0 };
+  const totals = { '15cm': {}, '20cm': {}, '25cm': {}, '30cm': {}, special: {}, mortar_tek: 0, blockfill: 0 };
   const otherTexts = [];
   const statusCounts = { requested: 0, on_schedule: 0, delivered: 0 };
 
@@ -719,6 +743,11 @@ async function loadByProject() {
         if (qty > 0) totals[size][type] = (totals[size][type] || 0) + qty;
       });
     });
+    if (items.special) {
+      Object.entries(items.special).forEach(([type, qty]) => {
+        if (qty > 0) totals.special[type] = (totals.special[type] || 0) + qty;
+      });
+    }
     if (items.mortar_tek > 0) totals.mortar_tek += items.mortar_tek;
     if (items.blockfill  > 0) totals.blockfill  += items.blockfill;
   });
@@ -745,6 +774,17 @@ async function loadByProject() {
       </div>`;
   };
 
+  const specialEntries = Object.entries(totals.special).filter(([, v]) => v > 0);
+  const specialSection = specialEntries.length ? `
+    <div class="proj-report-section">
+      <div class="proj-report-section-title">⭐ Special Blocks</div>
+      ${specialEntries.map(([type, qty]) => `
+        <div class="proj-report-row">
+          <span>${specialTypes[type] || type}</span>
+          <strong>${qty} pallets</strong>
+        </div>`).join('')}
+    </div>` : '';
+
   const hasMaterials = totals.mortar_tek > 0 || totals.blockfill > 0;
   const materialsSection = hasMaterials ? `
     <div class="proj-report-section">
@@ -759,7 +799,7 @@ async function loadByProject() {
       ${otherTexts.map((t, i) => `<div class="proj-report-other">${i + 1}. ${esc(t)}</div>`).join('')}
     </div>` : '';
 
-  const hasAny = sizes.some(s => Object.values(totals[s]).some(v => v > 0)) || hasMaterials || otherTexts.length;
+  const hasAny = sizes.some(s => Object.values(totals[s]).some(v => v > 0)) || specialEntries.length || hasMaterials || otherTexts.length;
   const projName = filterSel.options[filterSel.selectedIndex]?.text || '';
 
   wrap.innerHTML = `
@@ -770,7 +810,7 @@ async function loadByProject() {
       </div>
       <div class="proj-report-body">
         ${hasAny
-          ? renderSize('15cm') + renderSize('20cm') + renderSize('25cm') + renderSize('30cm') + materialsSection + otherSection
+          ? renderSize('15cm') + renderSize('20cm') + renderSize('25cm') + renderSize('30cm') + specialSection + materialsSection + otherSection
           : '<div class="admin-empty" style="padding:20px 0">No items specified in these requests.</div>'
         }
       </div>

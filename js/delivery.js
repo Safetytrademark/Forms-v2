@@ -71,9 +71,17 @@ function buildDeliveryItems() {
       bondbeams:    qty('b20_bondbeams'),
       halves:       qty('b20_halves'),
       multiblock:   qty('b20_multiblock'),
-      squints:      qty('b20_squints'),
       block_lock:   qty('b20_block_lock'),
       wall_mesh:    qty('b20_wall_mesh')
+    },
+    special: {
+      squints:          qty('sp_squints'),
+      half_height:      qty('sp_half_height'),
+      slabs:            qty('sp_slabs'),
+      dbl_bullnose_full: qty('sp_dbl_bullnose_full'),
+      dbl_bullnose_half: qty('sp_dbl_bullnose_half'),
+      sgl_bullnose_full: qty('sp_sgl_bullnose_full'),
+      sgl_bullnose_half: qty('sp_sgl_bullnose_half')
     },
     '25cm': {
       standards_2h: qty('b25_standards_2h'),
@@ -96,7 +104,7 @@ function buildDeliveryItems() {
 
 function totalItems(items) {
   let total = 0;
-  ['15cm','20cm','25cm','30cm'].forEach(size => {
+  ['15cm','20cm','25cm','30cm','special'].forEach(size => {
     if (items[size]) Object.values(items[size]).forEach(v => { total += v; });
   });
   total += (items.mortar_tek || 0) + (items.blockfill || 0);
