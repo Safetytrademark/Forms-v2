@@ -2992,3 +2992,11 @@ body::after {
   background: var(--bg-2);
   border-color: var(--tm-navy);
 }
+
+/* ── Auto-filled field (pre-populated from login) ────────────────────────── */
+.field-input--prefilled {
+  color: var(--text-muted, #8b8d96);
+  cursor: default;
+  border-color: var(--border, rgba(255,255,255,0.07)) !important;
+  background-image: none;
+}

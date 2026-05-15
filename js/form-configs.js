@@ -612,7 +612,7 @@ const FORM_FIELDS = {
 
     // FOREMAN SIGN-OFF
     { id: '_section_signoff',     label: 'Foreman Sign-Off',                        type: 'section' },
-    { id: 'supervisor_name',      label: 'Foreman — Printed Name',                 type: 'text',     placeholder: 'Print full name', required: true },
+    { id: 'supervisor_name',      label: 'Foreman — Printed Name',                 type: 'text',     required: true, autofill: 'foreman' },
     { id: 'signature',            label: 'Foreman — Signature',                    type: 'signature' }
   ],
 
@@ -673,34 +673,30 @@ const FORM_FIELDS = {
   ],
 
   'Production Report': [
-    { id: 'week_of',         label: 'Week Of',                type: 'date', required: true },
     { id: 'location',        label: 'Job / Location / Area',  type: 'text', placeholder: 'e.g. Langley Smith Athletic Park — Level 3' },
-    { id: 'gc',              label: 'General Contractor',     type: 'text', placeholder: 'e.g. Smith Bros Woodbridge' },
     { id: 'production',      label: 'Block Placement & Crew', type: 'production-table' },
     { id: 'delays',          label: 'Delays / Issues',        type: 'textarea', placeholder: 'Brief note on anything that impacted production...' },
-    { id: 'supervisor_name', label: 'Foreman Name',           type: 'text', placeholder: 'Print full name', required: true },
+    { id: 'supervisor_name', label: 'Foreman Name',           type: 'text', required: true, autofill: 'foreman' },
     { id: 'signature',       label: 'Foreman Sign Off',       type: 'signature' }
   ],
 
   'Telehandler Inspection': [
     { id: 'machine_unit',        label: 'Machine / Unit #',       type: 'text', placeholder: 'e.g. TH-01', required: true },
-    { id: 'operator',            label: 'Operator Name',           type: 'text', placeholder: 'Operator name', required: true },
     { id: 'checklist',           label: 'Daily Inspection',        type: 'daily-inspection' },
     { id: 'final_determination', label: 'Final Determination',     type: 'radio',
       options: ['Machine is SAFE for use as per today\'s inspection', 'Machine REQUIRES REPAIR before use — do not operate'], required: true },
     { id: 'add_comments',        label: 'Additional Comments',     type: 'textarea', placeholder: 'Any additional notes or deficiencies found...' },
-    { id: 'supervisor_name',     label: 'Competent Person Name',   type: 'text', placeholder: 'Print full name', required: true },
+    { id: 'supervisor_name',     label: 'Competent Person Name',   type: 'text', required: true, autofill: 'foreman' },
     { id: 'signature',           label: 'Competent Person Sign Off', type: 'signature' }
   ],
 
   'Forklift Inspection': [
     { id: 'machine_unit',        label: 'Machine / Unit #',       type: 'text', placeholder: 'e.g. FK-01', required: true },
-    { id: 'operator',            label: 'Operator Name',           type: 'text', placeholder: 'Operator name', required: true },
     { id: 'checklist',           label: 'Daily Inspection',        type: 'daily-inspection' },
     { id: 'final_determination', label: 'Final Determination',     type: 'radio',
       options: ['Machine is SAFE for use as per today\'s inspection', 'Machine REQUIRES REPAIR before use — do not operate'], required: true },
     { id: 'add_comments',        label: 'Additional Comments',     type: 'textarea', placeholder: 'Any additional notes or deficiencies found...' },
-    { id: 'supervisor_name',     label: 'Competent Person Name',   type: 'text', placeholder: 'Print full name', required: true },
+    { id: 'supervisor_name',     label: 'Competent Person Name',   type: 'text', required: true, autofill: 'foreman' },
     { id: 'signature',           label: 'Competent Person Sign Off', type: 'signature' }
   ],
 
@@ -729,25 +725,23 @@ const FORM_FIELDS = {
   ],
 
   'QAQC - Foreman': [
-    { id: 'project_number',    label: 'Project #',                          type: 'text',     placeholder: 'e.g. 25TM010' },
+    { id: 'project_number',    label: 'Project #',                          type: 'text',     autofill: 'project_code' },
     { id: 'location_area',     label: 'Location / Area',                    type: 'text',     placeholder: 'e.g. Level 3 — North Wall', required: true },
     { id: 'floor_room',        label: 'Floor / Room',                       type: 'text',     placeholder: 'e.g. Floor 4, Room 402' },
     { id: 'drawing_ref',       label: 'Drawing Ref #',                      type: 'text',     placeholder: 'e.g. A-201 Rev 3' },
-    { id: 'gc',                label: 'General Contractor',                 type: 'text',     placeholder: 'e.g. Smith Bros Woodbridge' },
     { id: 'work_description',  label: 'Work Description',                   type: 'textarea', placeholder: 'Brief description of the completed scope...' },
     { id: 'checklist',         label: 'Inspection Items',                   type: 'qaqc-table' },
     { id: 'overall_result',    label: 'Overall Result',                     type: 'radio',
       options: ['ALL ITEMS PASS — AREA ACCEPTED', 'HOLD — ITEMS REQUIRE CORRECTION BEFORE ACCEPTANCE'], required: true },
-    { id: 'supervisor_name',   label: 'Foreman / Inspector Name',           type: 'text',     placeholder: 'Print full name', required: true },
+    { id: 'supervisor_name',   label: 'Foreman / Inspector Name',           type: 'text',     required: true, autofill: 'foreman' },
     { id: 'signature',         label: 'Masonry Contractor Sign Off',        type: 'signature' },
     { id: 'gc_name',           label: 'GC Site Representative Name',        type: 'text',     placeholder: 'GC printed name (signs on paper)' }
   ],
 
   'Weekly Timesheet': [
-    { id: 'week_ending',     label: 'Week Ending (date)',    type: 'date', required: true },
     { id: 'location',        label: 'Job / Location / Area', type: 'text', placeholder: 'e.g. Langley Smith Athletic Park — Level 3' },
     { id: 'timesheet',       label: 'Employee Hours',        type: 'timesheet-table' },
-    { id: 'supervisor_name', label: 'Foreman Name',          type: 'text', placeholder: 'Print full name', required: true },
+    { id: 'supervisor_name', label: 'Foreman Name',          type: 'text', required: true, autofill: 'foreman' },
     { id: 'signature',       label: 'Foreman Sign Off',      type: 'signature' }
   ]
 };

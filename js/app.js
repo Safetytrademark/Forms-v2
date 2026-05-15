@@ -777,6 +777,22 @@ function renderField(field, container) {
     input.placeholder = field.placeholder || '';
     input.value = state.fields[field.id] || '';
     input.addEventListener('input', e => { state.fields[field.id] = e.target.value; });
+
+    // ── Auto-fill from login / context ────────────────────────────────────────
+    if (field.autofill === 'foreman') {
+      const name = window.currentProfile?.full_name || state.foremanName || '';
+      input.value = name;
+      state.fields[field.id] = name;
+      input.readOnly = true;
+      input.classList.add('field-input--prefilled');
+    } else if (field.autofill === 'project_code') {
+      // Extract TM code — first token before the dash (e.g. "25TM010 - Axiom…" → "25TM010")
+      const code = (state.project || '').split(/\s*[-–]\s*/)[0].trim();
+      input.value = code;
+      state.fields[field.id] = code;
+      input.readOnly = true;
+      input.classList.add('field-input--prefilled');
+    }
   }
 
   if (input) { input.id = `field_${field.id}`; wrapper.appendChild(input); }
