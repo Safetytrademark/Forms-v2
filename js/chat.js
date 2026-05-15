@@ -293,19 +293,37 @@ async function updateChatUnreadBadges() {
     if (!latestByProj[m.project_id]) latestByProj[m.project_id] = m.created_at;
   });
 
-  // Count projects with unread messages
+  // Count projects with unread messages and collect their short names
   let totalUnread = 0;
+  const unreadNames = [];
   projRows.forEach(p => {
     const lastMsg  = latestByProj[p.id];
     const lastRead = (() => { try { return localStorage.getItem(`chat_read_${p.id}`); } catch(_){return null;} })();
-    if (lastMsg && (!lastRead || lastMsg > lastRead)) totalUnread++;
+    if (lastMsg && (!lastRead || lastMsg > lastRead)) {
+      totalUnread++;
+      // Extract short name — last part after final " - " (e.g. "25TM010 - Axiom - Firehall" → "Firehall")
+      const parts = p.name.split(' - ');
+      unreadNames.push(parts[parts.length - 1].trim());
+    }
   });
 
+  const hint = document.getElementById('chatUnreadHint');
+
   if (totalUnread > 0) {
-    badge.textContent  = totalUnread > 9 ? '9+' : String(totalUnread);
+    badge.textContent   = totalUnread > 9 ? '9+' : String(totalUnread);
     badge.style.display = 'flex';
+    if (hint) {
+      hint.textContent  = '💬 New in: ' + unreadNames.join(', ');
+      hint.style.color  = 'var(--accent, #c0272d)';
+      hint.style.fontWeight = '600';
+    }
   } else {
     badge.style.display = 'none';
+    if (hint) {
+      hint.textContent  = 'Messages with your team';
+      hint.style.color  = '';
+      hint.style.fontWeight = '';
+    }
   }
 }
 

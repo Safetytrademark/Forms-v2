@@ -68,6 +68,33 @@
       </select>
     </div>
 
+    <!-- ── Communication ─────────────────────────────────────────────────────── -->
+    <div class="dash-section-label">Communication</div>
+    <section class="dash-section dash-docs">
+      <button class="dash-card dash-card-doc accent-gray" data-action="chat" style="position:relative">
+        <span style="font-size:22px">💬</span>
+        <div>
+          <div class="dash-card-label">Project Chat</div>
+          <div class="dash-card-desc" id="chatUnreadHint">Messages with your team</div>
+        </div>
+        <span class="dash-card-arrow">›</span>
+        <span id="chatUnreadBadge" class="chat-unread-badge" style="display:none"></span>
+      </button>
+    </section>
+
+    <!-- ── Project Documentation ────────────────────────────────────────────── -->
+    <div class="dash-section-label">Project Documentation</div>
+    <section class="dash-section dash-docs">
+      <button class="dash-card dash-card-doc accent-gray" data-action="documents">
+        <img class="dash-card-img dash-card-img--sm" src="assets/icons/documents.svg" alt="">
+        <div>
+          <div class="dash-card-label">Project Documents</div>
+          <div class="dash-card-desc">Drawings, RFIs, change orders</div>
+        </div>
+        <span class="dash-card-arrow">›</span>
+      </button>
+    </section>
+
     <!-- ── Safety ───────────────────────────────────────────────────────────── -->
     <div class="dash-section-label">Safety</div>
     <section class="dash-section dash-grid">
@@ -137,33 +164,6 @@
       <button class="dash-item" data-type="QAQC - Foreman">
         <span class="dash-item-emoji">🔍</span>
         <span class="dash-item-label">QAQC - Foreman</span>
-      </button>
-    </section>
-
-    <!-- ── Project Documentation ────────────────────────────────────────────── -->
-    <div class="dash-section-label">Project Documentation</div>
-    <section class="dash-section dash-docs">
-      <button class="dash-card dash-card-doc accent-gray" data-action="documents">
-        <img class="dash-card-img dash-card-img--sm" src="assets/icons/documents.svg" alt="">
-        <div>
-          <div class="dash-card-label">Project Documents</div>
-          <div class="dash-card-desc">Drawings, RFIs, change orders</div>
-        </div>
-        <span class="dash-card-arrow">›</span>
-      </button>
-    </section>
-
-    <!-- ── Project Chat ───────────────────────────────────────────────────────── -->
-    <div class="dash-section-label">Communication</div>
-    <section class="dash-section dash-docs">
-      <button class="dash-card dash-card-doc accent-gray" data-action="chat" style="position:relative">
-        <span style="font-size:22px">💬</span>
-        <div>
-          <div class="dash-card-label">Project Chat</div>
-          <div class="dash-card-desc">Messages with your team</div>
-        </div>
-        <span class="dash-card-arrow">›</span>
-        <span id="chatUnreadBadge" class="chat-unread-badge" style="display:none"></span>
       </button>
     </section>
 
