@@ -6,6 +6,9 @@ let adminCurrentUser    = null;
 let adminAllProjects    = [];     // full list for assign modal
 let assignTarget        = null;   // { id, name } of the foreman being assigned
 
+// ── Valid tab IDs ─────────────────────────────────────────────────────────────
+const ADMIN_TABS = ['foremans','projects','documents','deliveries','by-project','submissions','tm-equipment','rental','chats'];
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   // ── Auth guard ──────────────────────────────────────────────────────────────
@@ -22,12 +25,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Expose profile for chat.js (senderName)
+  window.currentProfile = profile;
+  window.adminCurrentUser = adminCurrentUser;
+
   // Show user label
   const lbl = document.getElementById('adminUserLabel');
   if (lbl) lbl.textContent = profile.full_name || adminCurrentUser.email;
 
   // Load all tabs
-  await Promise.all([loadForemans(), loadProjects(), loadDocuments(), loadDeliveries(), loadByProject(), loadSubmissions(), loadTMEquipment(), loadRentalEquipment()]);
+  await Promise.all([loadForemans(), loadProjects(), loadDocuments(), loadDeliveries(), loadByProject(), loadSubmissions(), loadTMEquipment(), loadRentalEquipment(), loadAdminChats()]);
+
+  // ── Navigate to tab from URL hash (or default to foremans) ──────────────────
+  const hashTab = window.location.hash.slice(1);
+  switchTab(ADMIN_TABS.includes(hashTab) ? hashTab : 'foremans', { updateHash: false });
 });
 
 // ── Sign out ──────────────────────────────────────────────────────────────────
@@ -36,15 +47,38 @@ async function adminLogout() {
   window.location.href = 'index.html';
 }
 
-// ── Tab switching ─────────────────────────────────────────────────────────────
-function switchTab(tab) {
+// ── Tab switching (with URL hash routing) ────────────────────────────────────
+function switchTab(tab, { updateHash = true } = {}) {
   document.querySelectorAll('.admin-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.tab === tab);
   });
   document.querySelectorAll('.admin-panel').forEach(p => {
     p.classList.toggle('active', p.id === `tab-${tab}`);
   });
+  // Update browser URL so each tab is bookmarkable / shareable
+  if (updateHash) {
+    history.pushState({ tab }, '', `#${tab}`);
+  }
+  // Update page <title> for clarity
+  const labels = {
+    'foremans':    'Foremans',
+    'projects':    'Projects',
+    'documents':   'Documents',
+    'deliveries':  'Deliveries',
+    'by-project':  'By Project',
+    'submissions': 'Submissions',
+    'tm-equipment':'TM Equipment',
+    'rental':      'Rental Scaffold',
+    'chats':       'Project Chats',
+  };
+  document.title = `${labels[tab] || tab} — Admin · Trademark Safety`;
 }
+
+// ── Browser back / forward button support ────────────────────────────────────
+window.addEventListener('popstate', e => {
+  const tab = e.state?.tab || window.location.hash.slice(1) || 'foremans';
+  if (ADMIN_TABS.includes(tab)) switchTab(tab, { updateHash: false });
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 //  FOREMANS TAB
@@ -244,7 +278,7 @@ async function loadDocuments() {
 
   let query = sbClient
     .from('documents')
-    .select('id, title, type, file_name, file_url, created_at, project_id, projects(name)')
+    .select('id, title, type, file_name, file_url, notes, created_at, project_id, projects(name)')
     .order('created_at', { ascending: false });
 
   if (filterSel?.value) {
@@ -300,7 +334,10 @@ async function loadDocuments() {
             </a>
             <div class="doc-photo-info">
               <div class="doc-photo-title" title="${esc(d.title)}">${esc(d.title)}</div>
-              <div class="doc-photo-meta">${esc(d.projects?.name || '')} · ${formatDate(d.created_at)}</div>
+              <div class="doc-photo-meta">
+                <span class="doc-proj-badge">${esc(d.projects?.name || '—')}</span>
+                · ${formatDate(d.created_at)}
+              </div>
             </div>
             <button class="doc-photo-del" onclick="deleteDocument('${d.id}','${esc(d.file_name||'')}')" title="Delete">🗑</button>
           </div>`;
@@ -313,7 +350,11 @@ async function loadDocuments() {
           <div class="doc-row">
             <div class="doc-row-info">
               <div class="doc-row-title">${esc(d.title)}</div>
-              <div class="doc-row-meta">${esc(d.projects?.name || '')} · ${formatDate(d.created_at)}</div>
+              <div class="doc-row-meta">
+                <span class="doc-proj-badge">${esc(d.projects?.name || '—')}</span>
+                · ${formatDate(d.created_at)}
+              </div>
+              ${d.notes ? `<div class="doc-row-notes">${esc(d.notes)}</div>` : ''}
             </div>
             <a class="admin-btn-icon" href="${d.file_url}" target="_blank" rel="noopener" style="text-decoration:none">↗ Open</a>
             <button class="admin-btn-danger" onclick="deleteDocument('${d.id}','${esc(d.file_name||'')}')">🗑</button>
@@ -362,19 +403,23 @@ async function uploadDocument() {
       .from('project-documents')
       .getPublicUrl(path);
 
-    // 3. Insert row via RPC (bypasses RLS — security enforced inside the function)
-    const { error: dbErr } = await sbClient.rpc('insert_document', {
-      p_project_id: projectId,
-      p_title:      title,
-      p_type:       type,
-      p_file_name:  path,
-      p_file_url:   publicUrl
+    // 3. Insert row (admin has full write RLS access to documents)
+    const notes = (document.getElementById('docNotes')?.value || '').trim() || null;
+    const { error: dbErr } = await sbClient.from('documents').insert({
+      project_id:  projectId,
+      title,
+      type,
+      notes,
+      file_name:   path,
+      file_url:    publicUrl,
+      uploaded_by: adminCurrentUser?.id || null
     });
 
     if (dbErr) throw dbErr;
 
     // Reset form
     document.getElementById('docTitle').value = '';
+    document.getElementById('docNotes').value = '';
     fileInput.value = '';
     await loadDocuments();
 
@@ -1060,4 +1105,82 @@ function esc(str) {
 function formatDate(iso) {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  CHATS TAB
+// ═════════════════════════════════════════════════════════════════════════════
+
+async function loadAdminChats() {
+  const sidebar = document.getElementById('adminChatSidebar');
+  if (!sidebar) return;
+
+  const { data: projects } = await sbClient
+    .from('projects').select('id, name').eq('status', 'active').order('name');
+
+  if (!projects?.length) {
+    sidebar.innerHTML = '<div style="padding:16px;font-size:13px;color:var(--text-muted)">No active projects.</div>';
+    return;
+  }
+
+  // Fetch latest message per project for sidebar preview
+  const { data: latestMsgs } = await sbClient
+    .from('project_messages')
+    .select('project_id, body, sender_name, file_name, created_at')
+    .in('project_id', projects.map(p => p.id))
+    .order('created_at', { ascending: false });
+
+  const latestByProj = {};
+  (latestMsgs || []).forEach(m => {
+    if (!latestByProj[m.project_id]) latestByProj[m.project_id] = m;
+  });
+
+  // Admin unread: compare with localStorage
+  sidebar.innerHTML = projects.map(p => {
+    const last    = latestByProj[p.id];
+    const preview = last
+      ? esc(last.body || `📎 ${last.file_name || 'File'}`)
+      : 'No messages yet';
+    const time = last
+      ? new Date(last.created_at).toLocaleDateString(undefined, { month:'short', day:'numeric' })
+      : '';
+
+    // Unread dot: last message newer than localStorage timestamp
+    let unread = false;
+    try {
+      const lastRead = localStorage.getItem(`chat_read_${p.id}`);
+      if (last && (!lastRead || last.created_at > lastRead)) unread = true;
+    } catch (_) {}
+
+    return `
+      <div class="admin-chat-proj-item" data-proj-id="${p.id}"
+        onclick="selectAdminChatProject(this,'${p.id}','${esc(p.name)}')">
+        <div class="admin-chat-proj-name">
+          ${esc(p.name)}
+          ${unread ? '<span class="admin-chat-unread-dot"></span>' : ''}
+        </div>
+        <div class="admin-chat-proj-preview">${preview}</div>
+        ${time ? `<div class="admin-chat-proj-time">${time}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+async function selectAdminChatProject(el, projectId, projectName) {
+  // Highlight active item in sidebar
+  document.querySelectorAll('.admin-chat-proj-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+
+  // Remove unread dot from this item
+  el.querySelector('.admin-chat-unread-dot')?.remove();
+
+  // Update panel header
+  const titleEl = document.getElementById('adminChatTitle');
+  if (titleEl) titleEl.textContent = projectName;
+
+  // Show footer
+  const footerEl = document.getElementById('adminChatFooter');
+  if (footerEl) footerEl.style.display = 'flex';
+
+  // Load chat messages via chat.js
+  await openAdminChat(projectId, projectName);
 }

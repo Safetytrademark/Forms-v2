@@ -1079,3 +1079,45 @@ body { min-height: 100dvh; }
   backdrop-filter: blur(4px);
 }
 .doc-photo-card:hover .doc-photo-del { opacity: 1; }
+
+/* ── Document upload notes textarea ─────────────────────────────────────── */
+.doc-notes-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 72px;
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.field-optional {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* ── Document row enhancements ──────────────────────────────────────────── */
+.doc-proj-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(138,42,43,0.1);
+  color: var(--accent);
+  border: 1px solid rgba(138,42,43,0.2);
+  white-space: nowrap;
+  margin-right: 2px;
+}
+
+.doc-row-notes {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 5px;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

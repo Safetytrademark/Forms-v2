@@ -122,6 +122,7 @@ async function showHomeDashboard() {
   const alert = document.getElementById('dashTailgateAlert');
   if (alert) alert.hidden = !!(tailgate.value);
   renderWeather(weather.value ?? null);
+  updateChatUnreadBadges();
 }
 
 // Check if a Daily Tailgate was submitted today for this user
@@ -197,6 +198,7 @@ function handleDashAction(action) {
     case 'delivery':   return openDeliveryModal();
     case 'equipment':  return openEquipmentOverlay();
     case 'documents':  return openDocsPage();
+    case 'chat':       return openChatPage();
     case 'admin':      return openAdminPanel();
   }
 }
@@ -300,6 +302,7 @@ async function openDocsPage() {
         html += `<a class="fdoc-row" href="${d.file_url}" target="_blank" rel="noopener">
           <div class="fdoc-row-info">
             <div class="fdoc-row-title">${s(d.title)}</div>
+            ${d.notes ? `<div class="fdoc-row-notes">${s(d.notes)}</div>` : ''}
             <div class="fdoc-row-date">${new Date(d.created_at).toLocaleDateString()}</div>
           </div>
           <span class="fdoc-row-arrow">↗</span>

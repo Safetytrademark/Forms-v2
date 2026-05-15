@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css?v=12">
+  <link rel="stylesheet" href="css/chat.css?v=13">
   <!-- Supabase JS client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -149,6 +150,20 @@
           <div class="dash-card-desc">Drawings, RFIs, change orders</div>
         </div>
         <span class="dash-card-arrow">›</span>
+      </button>
+    </section>
+
+    <!-- ── Project Chat ───────────────────────────────────────────────────────── -->
+    <div class="dash-section-label">Communication</div>
+    <section class="dash-section dash-docs">
+      <button class="dash-card dash-card-doc accent-gray" data-action="chat" style="position:relative">
+        <span style="font-size:22px">💬</span>
+        <div>
+          <div class="dash-card-label">Project Chat</div>
+          <div class="dash-card-desc">Messages with your team</div>
+        </div>
+        <span class="dash-card-arrow">›</span>
+        <span id="chatUnreadBadge" class="chat-unread-badge" style="display:none"></span>
       </button>
     </section>
 
@@ -488,6 +503,31 @@
   </div>
 </div><!-- /#equipmentPage -->
 
+<!-- ── Chat Page ──────────────────────────────────────────────────────────── -->
+<div id="chatPage" class="inner-page" style="display:none">
+  <div class="inner-page-header">
+    <button class="inner-page-back" onclick="closeChatPage()">← Back</button>
+    <div>
+      <div class="inner-page-subtitle" style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;opacity:.6">💬 Project Chat</div>
+      <div class="inner-page-title" id="chatPageProject" style="font-size:18px">—</div>
+    </div>
+  </div>
+  <div class="inner-page-body chat-page-body">
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-footer">
+      <label class="chat-attach-btn" title="Attach file">
+        📎
+        <input type="file" id="chatFileInput" accept="image/*,.pdf,.dwg" hidden
+          onchange="sendChatMessage('chatInput','chatFileInput')">
+      </label>
+      <input id="chatInput" class="chat-input" type="text"
+        placeholder="Message…"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage('chatInput','chatFileInput')}">
+      <button class="chat-send-btn" onclick="sendChatMessage('chatInput','chatFileInput')" title="Send">➤</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /#mainApp -->
 
 <!-- Toast notifications -->
@@ -510,6 +550,7 @@
 <script src="js/auth.js?v=12"></script>
 <script src="js/equipment.js?v=12"></script>
 <script src="js/delivery.js?v=12"></script>
+<script src="js/chat.js?v=13"></script>
 <script src="js/logo.js?v=12"></script>
 <script src="js/form-configs.js?v=12"></script>
 <script src="js/pdf-generator.js?v=12"></script>

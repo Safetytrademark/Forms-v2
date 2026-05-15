@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/chat.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -54,6 +55,9 @@
     </button>
     <button class="admin-tab" data-tab="rental"           onclick="switchTab('rental')">
       <span class="anav-icon">🏗</span><span class="anav-lbl">Rental Scaffold</span>
+    </button>
+    <button class="admin-tab" data-tab="chats"            onclick="switchTab('chats')">
+      <span class="anav-icon">💬</span><span class="anav-lbl">Chats</span>
     </button>
     <button class="admin-tab admin-tab-link"              onclick="window.open('calendar.html','_blank')">
       <span class="anav-icon">📅</span><span class="anav-lbl">Calendar ↗</span>
@@ -130,6 +134,12 @@
           <option value="submittal">Submittal</option>
           <option value="specification">Specification</option>
         </select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Brief explanation <span class="field-optional">(optional)</span></label>
+        <textarea class="field-input doc-notes-input" id="docNotes" rows="3"
+          placeholder="Describe what this document covers — revisions, scope, relevant context…"></textarea>
       </div>
 
       <div class="field-group">
@@ -292,6 +302,40 @@
     </div>
   </section>
 
+  <!-- ── Chats Tab ────────────────────────────────────────────────────────── -->
+  <section class="admin-panel" id="tab-chats">
+    <div class="admin-section-header">
+      <h2 class="admin-section-title">Project Chats</h2>
+      <p class="admin-section-sub">View and reply to messages from foremans on each project.</p>
+    </div>
+
+    <div class="admin-chat-layout">
+      <!-- Project list sidebar -->
+      <div class="admin-chat-sidebar" id="adminChatSidebar">
+        <div class="admin-loading" style="padding:20px;font-size:13px;color:var(--text-muted)">Loading projects…</div>
+      </div>
+
+      <!-- Chat panel -->
+      <div class="admin-chat-panel">
+        <div class="admin-chat-proj-header" id="adminChatTitle">← Select a project</div>
+        <div class="chat-messages" id="adminChatMessages">
+          <div class="chat-empty">Select a project to view its chat.</div>
+        </div>
+        <div class="chat-footer" id="adminChatFooter" style="display:none">
+          <label class="chat-attach-btn" title="Attach file">
+            📎
+            <input type="file" id="adminChatFileInput" accept="image/*,.pdf" hidden
+              onchange="sendChatMessage('adminChatInput','adminChatFileInput')">
+          </label>
+          <input id="adminChatInput" class="chat-input" type="text"
+            placeholder="Reply…"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage('adminChatInput','adminChatFileInput')}">
+          <button class="chat-send-btn" onclick="sendChatMessage('adminChatInput','adminChatFileInput')" title="Send">➤</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <!-- ── Transfer Modal ─────────────────────────────────────────────────────── -->
@@ -411,6 +455,7 @@
 </div>
 
 <script src="js/supabase-client.js"></script>
+<script src="js/chat.js"></script>
 <script src="js/admin.js"></script>
 </body>
 </html>
