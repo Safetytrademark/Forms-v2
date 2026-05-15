@@ -29,6 +29,7 @@ body { min-height: 100dvh; }
   height: 28px;
   width: auto;
   opacity: 0.92;
+  filter: brightness(0) invert(1);
 }
 
 .admin-title {
