@@ -557,7 +557,7 @@ async function loadDeliveries() {
     return;
   }
 
-  const pending = (reqs || []).filter(r => ['requested','on_schedule','pending','in_transit'].includes(r.status));
+  const pending = (reqs || []).filter(r => ['requested','on_schedule','on_hold','pending','in_transit'].includes(r.status));
   const history = (reqs || []).filter(r => ['delivered','cancelled'].includes(r.status));
 
   pendingWrap.innerHTML = pending.length
@@ -573,11 +573,13 @@ function renderDeliveryCard(req, compact = false) {
   const statusColors = {
     requested:   '#f59e0b',
     on_schedule: '#3b82f6',
+    on_hold:     '#8b5cf6',
     delivered:   '#22c55e'
   };
   const statusLabels = {
     requested:   '📋 Requested',
     on_schedule: '🚛 On Schedule',
+    on_hold:     '⏸ On Hold',
     delivered:   '✅ Delivered'
   };
   const color = statusColors[req.status] || 'var(--text-muted)';
@@ -598,6 +600,7 @@ function renderDeliveryCard(req, compact = false) {
       <select class="delivery-status-select" onchange="updateDeliveryStatus('${req.id}', this.value)">
         <option value="requested"   ${req.status==='requested'   ? 'selected':''}>📋 Requested</option>
         <option value="on_schedule" ${req.status==='on_schedule' ? 'selected':''}>🚛 On Schedule</option>
+        <option value="on_hold"     ${req.status==='on_hold'     ? 'selected':''}>⏸ On Hold</option>
         <option value="delivered"   ${req.status==='delivered'   ? 'selected':''}>✅ Delivered</option>
       </select>
       <button class="admin-btn-danger" onclick="deleteDelivery('${req.id}')">🗑 Delete</button>
@@ -838,22 +841,56 @@ async function loadSubmissions() {
 
   wrap.innerHTML = '<div class="admin-loading">Loading…</div>';
 
-  let query = sbClient
-    .from('submissions')
-    .select('id, foreman_name, project_name, submission_type, submitted_at, pdf_url')
-    .order('submitted_at', { ascending: false })
-    .limit(200);
+  const showDeliveries = !typeFilter?.value || typeFilter.value === 'Delivery Request';
+  const showForms      = !typeFilter?.value || typeFilter.value !== 'Delivery Request';
 
-  if (projFilter?.value) query = query.eq('project_name', projFilter.value);
-  if (typeFilter?.value) query = query.eq('submission_type', typeFilter.value);
-
-  const { data, error } = await query;
-
-  if (error) {
-    wrap.innerHTML = '<div class="admin-empty">Could not load submissions.</div>';
-    return;
+  // ── Fetch form submissions ────────────────────────────────────────────────
+  let formRows = [];
+  if (showForms) {
+    let query = sbClient
+      .from('submissions')
+      .select('id, foreman_name, project_name, submission_type, submitted_at, pdf_url')
+      .order('submitted_at', { ascending: false })
+      .limit(200);
+    if (projFilter?.value) query = query.eq('project_name', projFilter.value);
+    if (typeFilter?.value) query = query.eq('submission_type', typeFilter.value);
+    const { data } = await query;
+    formRows = (data || []).map(s => ({ ...s, _kind: 'form', _date: s.submitted_at }));
   }
-  if (!data?.length) {
+
+  // ── Fetch delivery requests ───────────────────────────────────────────────
+  let delivRows = [];
+  if (showDeliveries) {
+    let dq = sbClient
+      .from('delivery_requests')
+      .select('id, foreman_id, profiles(full_name), projects(name), status, requested_at, needed_by, needed_by_time, items')
+      .order('requested_at', { ascending: false })
+      .limit(200);
+    if (projFilter?.value) {
+      const { data: pRow } = await sbClient.from('projects').select('id').eq('name', projFilter.value).single();
+      if (pRow) dq = dq.eq('project_id', pRow.id);
+    }
+    const { data: ddata } = await dq;
+    const statusLabels = { requested:'📋 Requested', on_schedule:'🚛 On Schedule', on_hold:'⏸ On Hold', delivered:'✅ Delivered' };
+    delivRows = (ddata || []).map(d => ({
+      _kind:          'delivery',
+      _date:          d.requested_at,
+      id:             d.id,
+      foreman_name:   d.profiles?.full_name || '—',
+      project_name:   d.projects?.name || '—',
+      submission_type:'Delivery Request',
+      submitted_at:   d.requested_at,
+      status:         d.status,
+      status_label:   statusLabels[d.status] || d.status,
+      needed_by:      d.needed_by,
+      needed_by_time: d.needed_by_time
+    }));
+  }
+
+  // ── Merge + sort ──────────────────────────────────────────────────────────
+  const all = [...formRows, ...delivRows].sort((a, b) => new Date(b._date) - new Date(a._date));
+
+  if (!all.length) {
     wrap.innerHTML = '<div class="admin-empty">No submissions found.</div>';
     return;
   }
@@ -871,22 +908,32 @@ async function loadSubmissions() {
     'Forklift Inspection':     '🚜',
     'E-Pallet Jack Inspection':'⚡',
     'Scaffolding Inspection':  '🪜',
+    'Delivery Request':        '📦',
   };
 
-  wrap.innerHTML = data.map(s => `
+  wrap.innerHTML = all.map(s => {
+    const icon = typeIcons[s.submission_type] || '📋';
+    const statusBadge = s._kind === 'delivery'
+      ? `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(139,92,246,0.15);color:#a78bfa;font-weight:600">${s.status_label}</span>`
+      : '';
+    const neededBy = s._kind === 'delivery' && s.needed_by
+      ? ` &nbsp;·&nbsp; Needed: ${formatDate(s.needed_by)}${s.needed_by_time ? ' ' + s.needed_by_time : ''}`
+      : '';
+    const action = s._kind === 'form' && s.pdf_url
+      ? `<a class="admin-btn-icon" href="${s.pdf_url}" target="_blank" rel="noopener">⬇ PDF</a>`
+      : statusBadge;
+    return `
     <div class="admin-table-row">
-      <span class="sub-type-icon">${typeIcons[s.submission_type] || '📋'}</span>
+      <span class="sub-type-icon">${icon}</span>
       <div class="admin-table-cell">
         <div class="admin-cell-name">${esc(s.submission_type)}</div>
         <div class="admin-cell-meta">
-          ${esc(s.foreman_name || '—')} &nbsp;·&nbsp; ${esc(s.project_name || '—')} &nbsp;·&nbsp; ${formatDate(s.submitted_at)}
+          ${esc(s.foreman_name || '—')} &nbsp;·&nbsp; ${esc(s.project_name || '—')} &nbsp;·&nbsp; ${formatDate(s.submitted_at)}${neededBy}
         </div>
       </div>
-      ${s.pdf_url
-        ? `<a class="admin-btn-icon" href="${s.pdf_url}" target="_blank" rel="noopener">⬇ PDF</a>`
-        : ''
-      }
-    </div>`).join('');
+      ${action}
+    </div>`;
+  }).join('');
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

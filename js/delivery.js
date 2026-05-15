@@ -48,10 +48,58 @@ function openDeliveryModal() {
 
   // Navigate to the delivery inner page
   showInnerPage('deliveryPage');
+  loadForemanDeliveries();
 }
 
 function closeDeliveryModal() {
   goHome();
+}
+
+// ── Foreman: load their own delivery history ──────────────────────────────────
+async function loadForemanDeliveries() {
+  const wrap = document.getElementById('foremanDeliveryHistory');
+  if (!wrap || !window.currentUser) return;
+
+  const { data, error } = await sbClient
+    .from('delivery_requests')
+    .select('id, status, requested_at, needed_by, needed_by_time, projects(name), items')
+    .eq('foreman_id', window.currentUser.id)
+    .order('requested_at', { ascending: false })
+    .limit(10);
+
+  if (error || !data?.length) {
+    wrap.innerHTML = '<div style="color:var(--text-muted);font-size:13px">No requests yet.</div>';
+    return;
+  }
+
+  const statusColors = { requested:'#f59e0b', on_schedule:'#3b82f6', on_hold:'#8b5cf6', delivered:'#22c55e', cancelled:'#6b7280' };
+  const statusLabels = { requested:'📋 Requested', on_schedule:'🚛 On Schedule', on_hold:'⏸ On Hold', delivered:'✅ Delivered', cancelled:'Cancelled' };
+
+  wrap.innerHTML = data.map(r => {
+    const color      = statusColors[r.status] || 'var(--text-muted)';
+    const label      = statusLabels[r.status] || r.status;
+    const proj       = r.projects?.name || '—';
+    const date       = r.needed_by ? `Needed: ${r.needed_by}${r.needed_by_time ? ' ' + r.needed_by_time : ''}` : '';
+    const canDelete  = r.status === 'requested';
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)">
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${proj}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${date || new Date(r.requested_at).toLocaleDateString()}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${color}20;color:${color};font-weight:600;white-space:nowrap">${label}</span>
+          ${canDelete ? `<button onclick="deleteForemanDelivery('${r.id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 4px;line-height:1" title="Delete">🗑</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function deleteForemanDelivery(id) {
+  if (!confirm('Delete this delivery request?')) return;
+  const { error } = await sbClient.from('delivery_requests').delete().eq('id', id);
+  if (error) { alert('Could not delete. Try again.'); return; }
+  loadForemanDeliveries();
 }
 
 // ── Build items object from form inputs ───────────────────────────────────────
@@ -176,6 +224,8 @@ async function submitDeliveryRequest() {
     if (typeof showToast === 'function') {
       showToast('📦 Delivery request sent!', 'success');
     }
+
+    loadForemanDeliveries();
 
     // ── SMS via Twilio Edge Function ─────────────────────────────────────────
     try {
