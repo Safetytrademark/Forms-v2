@@ -22,11 +22,11 @@ const EQ_ALL_SITES = ['CENTRA','DRAKE','WLAND','ALBERNI','B-5/6','COLUMBIA','B-7
 let _fTransferItem = null;
 
 function openEquipmentOverlay() {
-  document.getElementById('equipmentOverlay').style.display = 'flex';
+  showInnerPage('equipmentPage');
   loadForemanEquipment();
 }
 function closeEquipmentOverlay() {
-  document.getElementById('equipmentOverlay').style.display = 'none';
+  goHome();
 }
 
 async function loadForemanEquipment() {

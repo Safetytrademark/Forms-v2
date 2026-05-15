@@ -196,9 +196,118 @@ function handleDashAction(action) {
   switch (action) {
     case 'delivery':   return openDeliveryModal();
     case 'equipment':  return openEquipmentOverlay();
-    case 'documents':  return openDocumentPicker();
+    case 'documents':  return openDocsPage();
     case 'admin':      return openAdminPanel();
   }
+}
+
+// ── Inner-page navigation ─────────────────────────────────────────────────────
+// Hides home + form screens, shows the requested full-page div.
+function showInnerPage(pageId) {
+  const homeScreen   = document.getElementById('homeScreen');
+  const appDiv       = document.querySelector('#mainApp .app');
+  const progressWrap = document.querySelector('.progress-wrap');
+  const navBar       = document.querySelector('.nav-bar');
+  if (homeScreen)   homeScreen.style.display   = 'none';
+  if (appDiv)       appDiv.style.display       = 'none';
+  if (progressWrap) progressWrap.style.display = 'none';
+  if (navBar)       navBar.style.display       = 'none';
+  document.querySelectorAll('.inner-page').forEach(p => p.style.display = 'none');
+  const page = document.getElementById(pageId);
+  if (page) { page.style.display = 'flex'; }
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function goHome() {
+  document.querySelectorAll('.inner-page').forEach(p => p.style.display = 'none');
+  showHomeDashboard();
+}
+
+// ── Project Documents full page ───────────────────────────────────────────────
+async function openDocsPage() {
+  const project = state.project;
+  if (!project) {
+    showToast('Please select a project first ↑', 'warning');
+    const projSel = document.getElementById('dashProjectSelect');
+    if (projSel) {
+      projSel.focus();
+      projSel.classList.add('dash-project-bar-select--pulse');
+      setTimeout(() => projSel.classList.remove('dash-project-bar-select--pulse'), 900);
+    }
+    return;
+  }
+
+  showInnerPage('docsPage');
+  const projEl = document.getElementById('docsPageProject');
+  if (projEl) projEl.textContent = project;
+
+  const listEl = document.getElementById('docsPageList');
+  if (listEl) listEl.innerHTML = '<div class="docs-loading">Loading…</div>';
+
+  const docs = await loadProjectDocuments(project);
+  if (!listEl) return;
+
+  if (!docs.length) {
+    listEl.innerHTML = '<div class="docs-empty">No documents uploaded for this project yet.</div>';
+    return;
+  }
+
+  const SECTIONS = [
+    { key: 'site_photo',    label: 'Site Photos',    icon: '📸', isPhotos: true  },
+    { key: 'change_order',  label: 'Change Orders',  icon: '📋', isPhotos: false },
+    { key: 'rfi',           label: 'RFIs',           icon: '🔄', isPhotos: false },
+    { key: 'drawing',       label: 'Drawings',       icon: '📐', isPhotos: false },
+    { key: 'submittal',     label: 'Submittals',     icon: '📩', isPhotos: false },
+    { key: 'specification', label: 'Specifications', icon: '📑', isPhotos: false },
+    { key: 'general',       label: 'General',        icon: '📄', isPhotos: false },
+  ];
+
+  const byType = {};
+  for (const d of docs) {
+    const k = d.type || 'general';
+    if (!byType[k]) byType[k] = [];
+    byType[k].push(d);
+  }
+
+  const s = str => String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  let html = '';
+  for (const sec of SECTIONS) {
+    const items = byType[sec.key];
+    if (!items?.length) continue;
+
+    html += `<div class="fdoc-section">
+      <div class="fdoc-section-hdr">
+        <span>${sec.icon}</span>
+        <span class="fdoc-section-title">${sec.label}</span>
+        <span class="fdoc-count">${items.length}</span>
+      </div>`;
+
+    if (sec.isPhotos) {
+      html += `<div class="fdoc-photo-grid">`;
+      for (const d of items) {
+        html += `<a class="fdoc-photo-card" href="${d.file_url}" target="_blank" rel="noopener">
+          <img class="fdoc-photo-thumb" src="${d.file_url}" alt="${s(d.title)}" loading="lazy">
+          <div class="fdoc-photo-cap">${s(d.title)}</div>
+        </a>`;
+      }
+      html += `</div>`;
+    } else {
+      for (const d of items) {
+        html += `<a class="fdoc-row" href="${d.file_url}" target="_blank" rel="noopener">
+          <div class="fdoc-row-info">
+            <div class="fdoc-row-title">${s(d.title)}</div>
+            <div class="fdoc-row-date">${new Date(d.created_at).toLocaleDateString()}</div>
+          </div>
+          <span class="fdoc-row-arrow">↗</span>
+        </a>`;
+      }
+    }
+
+    html += `</div>`;
+  }
+
+  listEl.innerHTML = html || '<div class="docs-empty">No documents uploaded for this project yet.</div>';
 }
 
 // ── Weather (Open-Meteo — free, no API key) ──────────────────────────────────

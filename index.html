@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=10">
+  <link rel="stylesheet" href="css/styles.css?v=11">
   <!-- Supabase JS client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -338,17 +338,27 @@
 
 </div><!-- /.app -->
 
-</div><!-- /#mainApp -->
-
-<!-- ── Delivery Request Modal ────────────────────────────────────────────────── -->
-<div id="deliveryModal" class="delivery-modal-overlay" style="display:none">
-  <div class="delivery-modal">
-    <div class="delivery-modal-header">
-      <span>📦 Request Delivery</span>
-      <button class="delivery-modal-close" onclick="closeDeliveryModal()">✕</button>
+<!-- ── Documents Page ─────────────────────────────────────────────────────── -->
+<div id="docsPage" class="inner-page" style="display:none">
+  <div class="inner-page-header">
+    <button class="inner-page-back" onclick="goHome()">← Back</button>
+    <div>
+      <div class="inner-page-title">📄 Project Documents</div>
+      <div class="inner-page-subtitle" id="docsPageProject"></div>
     </div>
+  </div>
+  <div class="inner-page-body" id="docsPageList">
+    <div class="docs-loading">Loading…</div>
+  </div>
+</div>
 
-    <div class="delivery-modal-body">
+<!-- ── Delivery Page ──────────────────────────────────────────────────────── -->
+<div id="deliveryPage" class="inner-page" style="display:none">
+  <div class="inner-page-header">
+    <button class="inner-page-back" onclick="closeDeliveryModal()">← Back</button>
+    <div class="inner-page-title">📦 Request Delivery</div>
+  </div>
+  <div class="inner-page-body inner-page-form">
 
       <!-- Project + Date/Time -->
       <div class="field-group">
@@ -447,14 +457,33 @@
       </div>
 
       <div class="delivery-error" id="deliveryError"></div>
-    </div>
+  </div>
+  <div class="inner-page-footer">
+    <button class="btn btn-next" id="deliverySubmitBtn" onclick="submitDeliveryRequest()">Send Request →</button>
+  </div>
+</div><!-- /#deliveryPage -->
 
-    <div class="delivery-modal-footer">
-      <button class="btn btn-back" style="visibility:visible" onclick="closeDeliveryModal()">Cancel</button>
-      <button class="btn btn-next" id="deliverySubmitBtn" onclick="submitDeliveryRequest()">Send Request</button>
+<!-- ── Equipment Page ────────────────────────────────────────────────────── -->
+<div id="equipmentPage" class="inner-page" style="display:none">
+  <div class="inner-page-header">
+    <button class="inner-page-back" onclick="closeEquipmentOverlay()">← Back</button>
+    <div class="inner-page-title">🔧 Equipment</div>
+  </div>
+  <div class="inner-page-body">
+    <div class="eq-foreman-filters" style="margin-bottom:12px">
+      <select id="fEqCat" onchange="loadForemanEquipment()" class="field-input" style="width:100%">
+        <option value="">All Categories</option>
+        <option>Vehicles</option><option>Mixers</option><option>Saws</option>
+        <option>Power Tools</option><option>Scaffold</option><option>Miscellaneous</option>
+      </select>
+    </div>
+    <div id="fEqList">
+      <div class="docs-loading">Loading…</div>
     </div>
   </div>
-</div>
+</div><!-- /#equipmentPage -->
+
+</div><!-- /#mainApp -->
 
 <!-- Toast notifications -->
 <div class="toast" id="errorToast" role="alert" aria-live="polite"></div>
@@ -472,42 +501,17 @@
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
 <!-- App scripts (order matters) — bump ?v=N when editing to bust cache -->
-<script src="js/supabase-client.js?v=10"></script>
-<script src="js/auth.js?v=10"></script>
-<script src="js/equipment.js?v=10"></script>
-<script src="js/delivery.js?v=10"></script>
-<script src="js/logo.js?v=10"></script>
-<script src="js/form-configs.js?v=10"></script>
-<script src="js/pdf-generator.js?v=10"></script>
-<script src="js/api.js?v=10"></script>
-<script src="js/app.js?v=10"></script>
+<script src="js/supabase-client.js?v=11"></script>
+<script src="js/auth.js?v=11"></script>
+<script src="js/equipment.js?v=11"></script>
+<script src="js/delivery.js?v=11"></script>
+<script src="js/logo.js?v=11"></script>
+<script src="js/form-configs.js?v=11"></script>
+<script src="js/pdf-generator.js?v=11"></script>
+<script src="js/api.js?v=11"></script>
+<script src="js/app.js?v=11"></script>
 
-<!-- ── Equipment Overlay ─────────────────────────────────────────────────── -->
-<div id="equipmentOverlay" class="delivery-modal-overlay" style="display:none">
-  <div class="delivery-modal" style="max-width:560px;width:calc(100vw - 24px)">
-    <div class="delivery-modal-header">
-      <span>🔧 Equipment</span>
-      <button class="delivery-modal-close" onclick="closeEquipmentOverlay()">✕</button>
-    </div>
-    <div class="delivery-modal-body">
-
-      <div class="eq-foreman-filters">
-        <select id="fEqCat" onchange="loadForemanEquipment()" class="field-input" style="flex:1;min-width:140px">
-          <option value="">All Categories</option>
-          <option>Vehicles</option><option>Mixers</option><option>Saws</option>
-          <option>Power Tools</option><option>Scaffold</option><option>Miscellaneous</option>
-        </select>
-      </div>
-
-      <div id="fEqList" style="margin-top:12px">
-        <div class="admin-loading">Loading…</div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- ── Equipment Transfer Modal (foreman) ────────────────────────────────── -->
+<!-- ── Equipment Transfer Modal (remains as sheet — opened from equipment page) -->
 <div id="fTransferModal" class="delivery-modal-overlay" style="display:none;z-index:10001">
   <div class="delivery-modal" style="max-width:380px;width:calc(100vw - 24px)">
     <div class="delivery-modal-header">

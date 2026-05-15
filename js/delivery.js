@@ -11,14 +11,17 @@ function switchDelivTab(tab) {
   document.getElementById('delivPanelOther').style.display = isBlock ? 'none' : '';
 }
 
-// ── Open / Close modal ────────────────────────────────────────────────────────
+// ── Open / Close (now uses full inner page instead of overlay) ────────────────
 function openDeliveryModal() {
-  // Populate project dropdown from the logged-in user's assigned projects
+  // Populate project dropdown and pre-select from active project
   const sel = document.getElementById('delivProjectSelect');
   if (sel) {
     const projects = window.userProjects || [];
     sel.innerHTML = '<option value="">Select project…</option>' +
       projects.map(p => `<option value="${p}">${p}</option>`).join('');
+    // Pre-fill from dashboard project selection
+    const activeProject = (typeof state !== 'undefined' && state.project) ? state.project : '';
+    if (activeProject && projects.includes(activeProject)) sel.value = activeProject;
   }
 
   // Set default "needed by" to tomorrow
@@ -43,11 +46,12 @@ function openDeliveryModal() {
   // Always open on Block tab
   switchDelivTab('block');
 
-  document.getElementById('deliveryModal').style.display = 'flex';
+  // Navigate to the delivery inner page
+  showInnerPage('deliveryPage');
 }
 
 function closeDeliveryModal() {
-  document.getElementById('deliveryModal').style.display = 'none';
+  goHome();
 }
 
 // ── Build items object from form inputs ───────────────────────────────────────
