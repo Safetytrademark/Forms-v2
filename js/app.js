@@ -114,14 +114,13 @@ async function showHomeDashboard() {
     el.onclick = () => handleDashAction(el.dataset.action);
   });
 
-  // Tailgate banner + weather in parallel (lightweight)
-  const [tailgate, weather] = await Promise.allSettled([
-    checkTailgateToday(),
-    loadWeather()
-  ]);
+  // Tailgate banner
+  const tailgate = await checkTailgateToday().catch(() => null);
   const alert = document.getElementById('dashTailgateAlert');
-  if (alert) alert.hidden = !!(tailgate.value);
-  renderWeather(weather.value ?? null);
+  if (alert) alert.hidden = !!tailgate;
+
+  // Motivational phrase (random, changes each visit)
+  renderMotivationalPhrase();
   updateChatUnreadBadges();
 }
 
@@ -316,78 +315,52 @@ async function openDocsPage() {
   listEl.innerHTML = html || '<div class="docs-empty">No documents uploaded for this project yet.</div>';
 }
 
-// ── Weather (Open-Meteo — free, no API key) ──────────────────────────────────
-async function loadWeather() {
-  return new Promise(resolve => {
-    if (!navigator.geolocation) { resolve(null); return; }
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        try {
-          const res = await fetch(
-            `https://api.open-meteo.com/v1/forecast` +
-            `?latitude=${coords.latitude}&longitude=${coords.longitude}` +
-            `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m` +
-            `&temperature_unit=celsius&wind_speed_unit=kmh&timezone=auto`
-          );
-          const json = await res.json();
-          const c = json.current;
-          resolve({
-            temp:       Math.round(c.temperature_2m),
-            feelsLike:  Math.round(c.apparent_temperature),
-            wind:       Math.round(c.wind_speed_10m),
-            icon:       weatherIcon(c.weather_code),
-            condition:  weatherLabel(c.weather_code),
-            code:       c.weather_code
-          });
-        } catch { resolve(null); }
-      },
-      () => resolve(null),
-      { timeout: 6000, maximumAge: 5 * 60 * 1000 }
-    );
-  });
-}
+// ── Motivational Phrases ──────────────────────────────────────────────────────
+const MOTIVATIONAL_PHRASES = [
+  '🧱 Every brick laid is a step closer to something great.',
+  '💪 Hard work never lies — the wall speaks for itself.',
+  '🏗️ Built by hand, built to last.',
+  '🔨 The best crews don\'t just build structures, they build pride.',
+  '⚒️ Masonry is the art of turning stone into legacy.',
+  '🧱 One brick at a time — that\'s how monuments are made.',
+  '💼 Sweat today, stand tall in front of what you built tomorrow.',
+  '🏆 Excellence isn\'t an accident — it\'s laid course by course.',
+  '🔥 The toughest jobs create the toughest crews.',
+  '🧱 A plumb line never lies — neither does honest work.',
+  '⚡ Work hard in silence. Let the finished wall make the noise.',
+  '🤝 Great sites are built by great teams.',
+  '🏗️ Safety first, quality always, pride in every joint.',
+  '💪 You don\'t build walls with shortcuts — and you don\'t build a reputation that way either.',
+  '🧱 The foundation you lay today is the legacy you leave tomorrow.',
+  '🌟 A craftsman\'s hands tell stories no words can match.',
+  '🔨 Precision separates a good job from a great one.',
+  '⚒️ Every square foot of this city has a bricklayer behind it.',
+  '🏆 Show up. Work hard. Go home proud.',
+  '💼 The difference between ordinary and extraordinary is the extra effort.',
+  '🧱 Cold mornings, hot work — that\'s the life of a true tradesperson.',
+  '🔥 Brick by brick, day by day — something permanent grows.',
+  '💪 Your hands are building something that will outlast all of us.',
+  '⚡ Character is what you build when no one\'s watching the joint.',
+  '🤝 A safe crew is a strong crew.',
+  '🏗️ Trade skills are not just a job — they\'re a craft worth being proud of.',
+  '🧱 The mortar sets, the wall stands, the crew moves on to the next challenge.',
+  '🌟 Quality is remembered long after the deadline is forgotten.',
+  '🔨 Do it right the first time — rework costs more than care.',
+  '⚒️ No elevator to the top of a scaffold — you climb it one rung at a time.',
+  '🏆 A tradesperson\'s legacy is built in stone, brick, and hard work.',
+  '💼 The best job site is a safe job site.',
+  '🔥 Rain or shine — the work gets done.',
+  '💪 Built with local hands. Standing for generations.',
+  '🧱 Steady hands, sharp eyes, strong back — that\'s the trade.',
+];
 
-function weatherIcon(code) {
-  if (code === 0)           return '☀️';
-  if (code === 1)           return '🌤️';
-  if (code === 2)           return '⛅';
-  if (code === 3)           return '☁️';
-  if (code <= 48)           return '🌫️';
-  if (code <= 55)           return '🌦️';
-  if (code <= 67)           return '🌧️';
-  if (code <= 77)           return '🌨️';
-  if (code <= 82)           return '🌦️';
-  if (code <= 99)           return '⛈️';
-  return '🌡️';
-}
-
-function weatherLabel(code) {
-  if (code === 0)  return 'Clear sky';
-  if (code === 1)  return 'Mainly clear';
-  if (code === 2)  return 'Partly cloudy';
-  if (code === 3)  return 'Overcast';
-  if (code <= 48)  return 'Foggy';
-  if (code <= 55)  return 'Drizzle';
-  if (code <= 67)  return 'Rain';
-  if (code <= 77)  return 'Snow';
-  if (code <= 82)  return 'Showers';
-  return 'Thunderstorm';
-}
-
-function renderWeather(w) {
+function renderMotivationalPhrase() {
   const el = document.getElementById('dashWeather');
-  if (!el || !w) return;
-  el.hidden = false;
-  el.innerHTML =
-    `<span class="dash-weather-icon">${w.icon}</span>` +
-    `<span class="dash-weather-temp">${w.temp}°C</span>` +
-    `<span class="dash-weather-sep">·</span>` +
-    `<span class="dash-weather-label">${w.condition}</span>` +
-    `<span class="dash-weather-sep">·</span>` +
-    `<span class="dash-weather-wind">💨 ${w.wind} km/h</span>` +
-    (w.feelsLike !== w.temp
-      ? `<span class="dash-weather-sep">·</span><span class="dash-weather-feels">Feels ${w.feelsLike}°</span>`
-      : '');
+  if (!el) return;
+  const phrase = MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)];
+  el.hidden    = false;
+  el.className = 'dash-motto';
+  el.textContent = phrase;
 }
 
 function startFormFlow(allowedTypes) {

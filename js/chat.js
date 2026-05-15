@@ -9,43 +9,148 @@ let _chatRole        = 'foreman'; // 'foreman' | 'admin'
 let _chatContainerId = null;   // DOM id of the messages <div>
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  FOREMAN SIDE — inner-page
+//  FOREMAN SIDE — inner-page with project sidebar
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function openChatPage() {
-  const project = (typeof state !== 'undefined') ? state.project : null;
-  if (!project) {
-    if (typeof showToast === 'function') showToast('Please select a project first ↑', 'warning');
-    return;
-  }
-
-  // Resolve project ID from name
-  const { data: proj } = await sbClient
-    .from('projects').select('id').eq('name', project).single();
-  if (!proj) { if (typeof showToast === 'function') showToast('Project not found.', 'error'); return; }
-
-  _chatProjectId   = proj.id;
-  _chatProjectName = project;
   _chatRole        = 'foreman';
   _chatContainerId = 'chatMessages';
 
   if (typeof showInnerPage === 'function') showInnerPage('chatPage');
 
-  const titleEl = document.getElementById('chatPageProject');
-  if (titleEl) titleEl.textContent = project;
-
   // Hide form back-nav strip (not needed on inner pages)
   const formNav = document.getElementById('formPageNav');
   if (formNav) formNav.style.display = 'none';
 
-  await _loadAndRenderChat('chatMessages');
-  _subscribeToChat('chatMessages');
-  _markChatRead(_chatProjectId);
-  _scrollChatToBottom('chatMessages');
+  await _loadForemanChatSidebar();
+
+  // Auto-open the active project's chat if one is already selected
+  const activeProject = (typeof state !== 'undefined') ? state.project : null;
+  if (activeProject) {
+    const sidebarEl = document.getElementById('foremanChatSidebar');
+    const item = sidebarEl?.querySelector(`[data-project-name="${CSS.escape(activeProject)}"]`);
+    if (item) item.click();
+  }
+
   if (typeof requestChatNotificationPermission === 'function') requestChatNotificationPermission();
 }
 
+async function _loadForemanChatSidebar() {
+  const sidebar = document.getElementById('foremanChatSidebar');
+  if (!sidebar) return;
+  sidebar.innerHTML = '<div class="chat-loading">Loading…</div>';
+
+  const projectNames = window.userProjects || [];
+  if (!projectNames.length) {
+    sidebar.innerHTML = '<div class="chat-empty" style="padding:20px;font-size:13px">No projects assigned.</div>';
+    return;
+  }
+
+  // Resolve names → UUIDs + latest message preview
+  const { data: projRows } = await sbClient
+    .from('projects').select('id, name').in('name', projectNames);
+  if (!projRows?.length) {
+    sidebar.innerHTML = '<div class="chat-empty" style="padding:20px;font-size:13px">No projects found.</div>';
+    return;
+  }
+
+  const ids = projRows.map(p => p.id);
+  const { data: latestMsgs } = await sbClient
+    .from('project_messages')
+    .select('project_id, body, sender_name, sender_role, created_at')
+    .in('project_id', ids)
+    .order('created_at', { ascending: false });
+
+  const latestByProj = {};
+  (latestMsgs || []).forEach(m => {
+    if (!latestByProj[m.project_id]) latestByProj[m.project_id] = m;
+  });
+
+  // Sort: projects with messages first (most recent), then alphabetical
+  projRows.sort((a, b) => {
+    const la = latestByProj[a.id]?.created_at || '';
+    const lb = latestByProj[b.id]?.created_at || '';
+    if (la && lb) return lb.localeCompare(la);
+    if (la) return -1;
+    if (lb) return  1;
+    return a.name.localeCompare(b.name);
+  });
+
+  sidebar.innerHTML = projRows.map(p => {
+    const last    = latestByProj[p.id];
+    const preview = last
+      ? (last.body
+          ? (last.body.length > 38 ? last.body.slice(0, 38) + '…' : last.body)
+          : '📎 Attachment')
+      : 'No messages yet';
+    const senderPrefix = last
+      ? (last.sender_role === 'admin' ? 'Admin: ' : last.sender_name?.split(' ')[0] + ': ')
+      : '';
+    const lastRead  = (() => { try { return localStorage.getItem(`chat_read_${p.id}`); } catch(_){return null;} })();
+    const hasUnread = last && (!lastRead || last.created_at > lastRead);
+    // Short project label — last segment after " - "
+    const shortName = p.name.split(' - ').pop().trim();
+
+    return `<div class="foreman-chat-proj-item ${hasUnread ? 'has-unread' : ''}"
+                 data-project-id="${p.id}"
+                 data-project-name="${chatEsc(p.name)}"
+                 onclick="selectForemanChatProject(this,'${p.id}','${chatEsc(p.name).replace(/'/g,"\\'")}')">
+      <div class="foreman-chat-proj-name">${chatEsc(shortName)}</div>
+      <div class="foreman-chat-proj-preview">${chatEsc(senderPrefix)}${chatEsc(preview)}</div>
+      ${hasUnread ? '<span class="foreman-chat-unread-dot"></span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+async function selectForemanChatProject(el, projectId, projectName) {
+  // Highlight selected item
+  document.querySelectorAll('.foreman-chat-proj-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  el.classList.remove('has-unread');
+  el.querySelector('.foreman-chat-unread-dot')?.remove();
+
+  // Update header title
+  const titleEl = document.getElementById('chatPageProject');
+  const shortName = projectName.split(' - ').pop().trim();
+  if (titleEl) titleEl.textContent = shortName;
+
+  // Show chat footer
+  const footer = document.getElementById('foremanChatFooter');
+  if (footer) footer.style.display = 'flex';
+
+  // On mobile: slide to chat panel
+  const layout = document.querySelector('.foreman-chat-layout');
+  if (layout) layout.classList.add('chat-open');
+
+  _unsubscribeChat();
+  _chatProjectId   = projectId;
+  _chatProjectName = projectName;
+  _chatRole        = 'foreman';
+  _chatContainerId = 'chatMessages';
+
+  await _loadAndRenderChat('chatMessages');
+  _subscribeToChat('chatMessages');
+  _markChatRead(projectId);
+  _scrollChatToBottom('chatMessages');
+}
+
 function closeChatPage() {
+  const layout = document.querySelector('.foreman-chat-layout');
+  // On mobile: if a chat is open, go back to sidebar instead of home
+  if (layout && layout.classList.contains('chat-open') && window.innerWidth <= 600) {
+    layout.classList.remove('chat-open');
+    _unsubscribeChat();
+    _chatProjectId   = null;
+    _chatProjectName = '';
+    const titleEl = document.getElementById('chatPageProject');
+    if (titleEl) titleEl.textContent = 'Select a project';
+    const footer = document.getElementById('foremanChatFooter');
+    if (footer) footer.style.display = 'none';
+    const msgs = document.getElementById('chatMessages');
+    if (msgs) msgs.innerHTML = '<div class="chat-empty">Select a project on the left to start chatting 💬</div>';
+    document.querySelectorAll('.foreman-chat-proj-item').forEach(i => i.classList.remove('active'));
+    return;
+  }
   _unsubscribeChat();
   if (typeof goHome === 'function') goHome();
 }

@@ -508,21 +508,32 @@
     <button class="inner-page-back" onclick="closeChatPage()">← Back</button>
     <div>
       <div class="inner-page-subtitle" style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;opacity:.6">💬 Project Chat</div>
-      <div class="inner-page-title" id="chatPageProject" style="font-size:18px">—</div>
+      <div class="inner-page-title" id="chatPageProject" style="font-size:16px">Select a project</div>
     </div>
   </div>
-  <div class="inner-page-body chat-page-body">
-    <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-footer">
-      <label class="chat-attach-btn" title="Attach file">
-        📎
-        <input type="file" id="chatFileInput" accept="image/*,.pdf,.dwg" hidden
-          onchange="sendChatMessage('chatInput','chatFileInput')">
-      </label>
-      <input id="chatInput" class="chat-input" type="text"
-        placeholder="Message…"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage('chatInput','chatFileInput')}">
-      <button class="chat-send-btn" onclick="sendChatMessage('chatInput','chatFileInput')" title="Send">➤</button>
+  <div class="inner-page-body" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
+    <div class="foreman-chat-layout">
+      <!-- Sidebar: project list -->
+      <div class="foreman-chat-sidebar" id="foremanChatSidebar">
+        <div class="chat-loading">Loading…</div>
+      </div>
+      <!-- Chat panel -->
+      <div class="foreman-chat-panel">
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-empty">Select a project on the left to start chatting 💬</div>
+        </div>
+        <div class="chat-footer" id="foremanChatFooter" style="display:none">
+          <label class="chat-attach-btn" title="Attach file">
+            📎
+            <input type="file" id="chatFileInput" accept="image/*,.pdf,.dwg" hidden
+              onchange="sendChatMessage('chatInput','chatFileInput')">
+          </label>
+          <input id="chatInput" class="chat-input" type="text"
+            placeholder="Message…"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage('chatInput','chatFileInput')}">
+          <button class="chat-send-btn" onclick="sendChatMessage('chatInput','chatFileInput')" title="Send">➤</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

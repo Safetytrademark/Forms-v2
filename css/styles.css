@@ -2709,26 +2709,16 @@ body::after {
 .dash-alert-btn:hover  { background: var(--surface-flat-3); border-color: var(--text-dim); }
 .dash-alert-btn:active { transform: scale(0.98); }
 
-/* ── Weather pill ───────────────────────────────────────────────────────────── */
-.dash-weather {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 8px;
-  padding: 5px 10px;
-  background: var(--surface-flat);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
+/* ── Motivational phrase ─────────────────────────────────────────────────── */
+.dash-motto {
+  display: block;
+  margin-top: 7px;
   font-size: 12px;
   color: var(--text-muted);
-  width: fit-content;
+  font-style: italic;
+  line-height: 1.4;
+  max-width: 260px;
 }
-.dash-weather-icon  { font-size: 14px; line-height: 1; }
-.dash-weather-temp  { font-weight: 700; color: var(--text); font-size: 13px; }
-.dash-weather-sep   { opacity: 0.35; }
-.dash-weather-label { color: var(--text-muted); }
-.dash-weather-wind  { color: var(--text-muted); }
-.dash-weather-feels { color: var(--text-muted); font-style: italic; }
 
 /* ── Project selector bar ────────────────────────────────────────────────── */
 .dash-project-bar {

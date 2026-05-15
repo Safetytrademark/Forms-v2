@@ -333,3 +333,115 @@
   .admin-chat-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); max-height: 200px; }
   .admin-chat-panel { min-height: 400px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Foreman chat — two-column inside inner-page
+   ═══════════════════════════════════════════════════════════════════════════ */
+.foreman-chat-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Sidebar — project list */
+.foreman-chat-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border, rgba(255,255,255,0.07));
+  overflow-y: auto;
+  background: var(--surface-flat, #181a20);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Chat area */
+.foreman-chat-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg-0, #0a0b0e);
+}
+.foreman-chat-panel .chat-messages {
+  flex: 1;
+  overflow-y: auto;
+}
+.foreman-chat-panel .chat-footer {
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Project items in foreman sidebar */
+.foreman-chat-proj-item {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,0.07));
+  cursor: pointer;
+  transition: background 0.1s;
+  position: relative;
+}
+.foreman-chat-proj-item:hover  { background: var(--surface-flat-2, #1d1f26); }
+.foreman-chat-proj-item.active {
+  background: var(--surface-flat-2, #1d1f26);
+  border-left: 3px solid var(--accent, #c0272d);
+  padding-left: 11px;
+}
+.foreman-chat-proj-item.has-unread .foreman-chat-proj-name { color: #fff; font-weight: 700; }
+
+.foreman-chat-proj-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #ecedee);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.foreman-chat-proj-preview {
+  font-size: 11px;
+  color: var(--text-muted, #8b8d96);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Unread dot on foreman sidebar */
+.foreman-chat-unread-dot {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  flex-shrink: 0;
+}
+
+/* ── Mobile: slide between sidebar and chat ──────────────────────────────── */
+@media (max-width: 600px) {
+  .foreman-chat-layout {
+    position: relative;
+    overflow: hidden;
+  }
+  /* Show sidebar full-width by default */
+  .foreman-chat-sidebar {
+    width: 100%;
+    flex-shrink: 0;
+    border-right: none;
+  }
+  /* Chat panel hidden behind sidebar on mobile */
+  .foreman-chat-panel {
+    position: absolute;
+    inset: 0;
+    transform: translateX(100%);
+    transition: transform 0.28s ease;
+    background: var(--bg-0, #0a0b0e);
+  }
+  /* When a project is selected: slide chat into view */
+  .foreman-chat-layout.chat-open .foreman-chat-panel {
+    transform: translateX(0);
+  }
+  .foreman-chat-layout.chat-open .foreman-chat-sidebar {
+    /* sidebar still accessible via back button in header */
+  }
+}
