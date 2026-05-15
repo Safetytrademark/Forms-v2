@@ -624,27 +624,52 @@ function drawPDFCheckbox(doc, x, y, checked, C) {
 }
 
 function fileToDataURL(file) {
+  // Helper: draw an Image element onto a canvas and export as compressed JPEG
+  function canvasCompress(imgEl) {
+    const MAX = 1024;          // max dimension in px — enough for a PDF photo grid
+    const QUALITY = 0.68;      // JPEG quality: 68% keeps files small, looks fine on paper
+    const canvas = document.createElement('canvas');
+    let w = imgEl.naturalWidth  || imgEl.width;
+    let h = imgEl.naturalHeight || imgEl.height;
+    if (w > MAX || h > MAX) {
+      if (w >= h) { h = Math.round((h / w) * MAX); w = MAX; }
+      else        { w = Math.round((w / h) * MAX); h = MAX; }
+    }
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
+    return canvas.toDataURL('image/jpeg', QUALITY);
+  }
+
   return new Promise((resolve, reject) => {
-    const img = new Image();
+    const url = URL.createObjectURL(file);
+    const img  = new Image();
+
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const maxDim = 900;
-      let w = img.width, h = img.height;
-      if (w > maxDim || h > maxDim) {
-        if (w > h) { h = (h / w) * maxDim; w = maxDim; }
-        else { w = (w / h) * maxDim; h = maxDim; }
-      }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', 0.75));
+      try { resolve(canvasCompress(img)); }
+      catch(e) { reject(e); }
+      finally  { URL.revokeObjectURL(url); }
     };
+
+    // Fallback for HEIC/HEIF and other formats browsers can't decode natively:
+    // load via FileReader → Blob → another img attempt, still compress via canvas.
+    // If that also fails, embed as-is (last resort).
     img.onerror = () => {
+      URL.revokeObjectURL(url);
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => {
+        const img2 = new Image();
+        img2.onload = () => {
+          try { resolve(canvasCompress(img2)); }
+          catch(e) { resolve(reader.result); } // last resort: embed raw
+        };
+        img2.onerror = () => resolve(reader.result); // last resort: embed raw
+        img2.src = reader.result;
+      };
       reader.onerror = reject;
       reader.readAsDataURL(file);
     };
-    img.src = URL.createObjectURL(file);
+
+    img.src = url;
   });
 }
 
