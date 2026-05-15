@@ -2177,7 +2177,8 @@ function renderSitePhotosStep() {
   document.getElementById('spFileInput').addEventListener('change', e => {
     const caption = (document.getElementById('spCapInput')?.value || '').trim();
     Array.from(e.target.files)
-      .filter(f => f.type.startsWith('image/'))
+      // Accept image/* types AND HEIC (iOS sometimes reports empty type for HEIC)
+      .filter(f => f.type.startsWith('image/') || f.name.toLowerCase().endsWith('.heic') || f.name.toLowerCase().endsWith('.heif'))
       .forEach(f => _spPhotos.push({ file: f, caption, objectUrl: URL.createObjectURL(f) }));
     e.target.value = '';
     const capEl = document.getElementById('spCapInput');
@@ -2237,13 +2238,14 @@ async function handleSitePhotosUpload() {
     let uploaded = 0;
 
     for (const p of _spPhotos) {
-      const ext      = p.file.name.split('.').pop() || 'jpg';
-      const safeName = `${date}_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+      const ext        = (p.file.name.split('.').pop() || 'jpg').toLowerCase();
+      const mimeType   = p.file.type || (ext === 'heic' ? 'image/heic' : 'image/jpeg');
+      const safeName   = `${date}_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
       const storagePath = `${project.id}/site-photos/${safeName}`;
 
       const { error: upErr } = await sbClient.storage
         .from('project-documents')
-        .upload(storagePath, p.file, { contentType: p.file.type, upsert: false });
+        .upload(storagePath, p.file, { contentType: mimeType, upsert: false });
 
       if (upErr) { console.warn('Photo upload skipped:', p.file.name, upErr.message); continue; }
 
@@ -2257,7 +2259,7 @@ async function handleSitePhotosUpload() {
         project_id:  project.id,
         title,
         type:        'site_photo',
-        file_name:   storagePath,   // store path so admin can delete from storage
+        file_name:   storagePath,
         file_url:    publicUrl,
         uploaded_by: window.currentUser?.id
       });
