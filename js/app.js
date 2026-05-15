@@ -240,6 +240,9 @@ async function openDocsPage() {
   showInnerPage('docsPage');
   const projEl = document.getElementById('docsPageProject');
   if (projEl) projEl.textContent = project;
+  // Also hide the form strip (not needed on inner pages)
+  const formNav = document.getElementById('formPageNav');
+  if (formNav) formNav.style.display = 'none';
 
   const listEl = document.getElementById('docsPageList');
   if (listEl) listEl.innerHTML = '<div class="docs-loading">Loading…</div>';
@@ -443,17 +446,20 @@ function openDocumentPicker() {
 }
 
 // ── Navigation ───────────────────────────────────────────────────────────────
+// Shared back handler — called by both the header strip button and btnBack
+function _handleBack() {
+  if (state.fromDashboard && state.currentStep === 3) {
+    showHomeDashboard();
+  } else if (state.currentStep > 1) {
+    goToStep(state.currentStep - 1);
+  } else {
+    showHomeDashboard();
+  }
+}
+
 function attachNavListeners() {
-  document.getElementById('btnBack').addEventListener('click', () => {
-    // When type was pre-selected on dashboard, Back from the form returns home
-    if (state.fromDashboard && state.currentStep === 3) {
-      showHomeDashboard();
-    } else if (state.currentStep > 1) {
-      goToStep(state.currentStep - 1);
-    } else {
-      showHomeDashboard();
-    }
-  });
+  document.getElementById('btnBack').addEventListener('click', _handleBack);
+  document.getElementById('formBtnBack').addEventListener('click', _handleBack);
   document.getElementById('btnNext').addEventListener('click', async () => {
     if (!validateStep(state.currentStep)) return;
     // Site Photos submits directly from step 3 (no PDF, no step 4)
@@ -495,8 +501,17 @@ function updateProgressBar(step) {
 function updateNavButtons(step) {
   const back = document.getElementById('btnBack');
   const next = document.getElementById('btnNext');
-  back.style.visibility = 'visible';
-  back.textContent = step === 1 ? '← Home' : '← Back';
+  const formNav = document.getElementById('formPageNav');
+  const formBackBtn = document.getElementById('formBtnBack');
+
+  // Bottom back button is replaced by top strip — hide it
+  back.style.display = 'none';
+
+  // Show top back strip with correct label
+  const backLabel = step === 1 ? '← Home' : '← Back';
+  if (formNav)     formNav.style.display = 'flex';
+  if (formBackBtn) formBackBtn.textContent = backLabel;
+
   const isSitePhotosSubmit = (step === 3 && state.submissionType === 'Site Photos Only');
   const isSubmitStep = step === 4 || isSitePhotosSubmit;
   next.textContent = isSubmitStep ? '📤 Upload Photos' : 'Next →';
@@ -2232,19 +2247,21 @@ async function handleSitePhotosUpload() {
 
       if (upErr) { console.warn('Photo upload skipped:', p.file.name, upErr.message); continue; }
 
-      const { data: urlData } = await sbClient.storage
+      // Bucket is public — use getPublicUrl (no auth required, no expiry)
+      const { data: { publicUrl } } = sbClient.storage
         .from('project-documents')
-        .createSignedUrl(storagePath, 60 * 60 * 24 * 365 * 3); // 3 years
+        .getPublicUrl(storagePath);
 
       const title = p.caption.trim() || 'Site Photo';
-      await sbClient.from('documents').insert({
+      const { error: dbErr } = await sbClient.from('documents').insert({
         project_id:  project.id,
         title,
         type:        'site_photo',
-        file_name:   p.file.name,
-        file_url:    urlData?.signedUrl || '',
+        file_name:   storagePath,   // store path so admin can delete from storage
+        file_url:    publicUrl,
         uploaded_by: window.currentUser?.id
       });
+      if (dbErr) { console.warn('Document record failed:', dbErr.message); continue; }
       uploaded++;
     }
 

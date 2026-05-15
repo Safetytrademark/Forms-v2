@@ -1411,6 +1411,18 @@ body::after {
 .folder-setup-btn:active { opacity: 0.8; }
 .folder-setup-btn:disabled { opacity: 0.5; cursor: default; }
 
+/* ── Form page top-nav strip (← Back at top, consistent with inner pages) ── */
+.form-page-nav {
+  display: none; /* shown by JS */
+  align-items: center;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
 /* ── Nav buttons ────────────────────────────────────────────────────────── */
 /* Solid full-width backdrop strip behind the centered nav buttons */
 .nav-bar {
