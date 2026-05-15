@@ -34,7 +34,7 @@
 <nav class="admin-nav-wrap">
   <div class="admin-nav-grid">
     <button class="admin-tab active" data-tab="foremans"  onclick="switchTab('foremans')">
-      <span class="anav-icon">👷</span><span class="anav-lbl">Foremans</span>
+      <span class="anav-icon">👷</span><span class="anav-lbl">Team</span>
     </button>
     <button class="admin-tab" data-tab="projects"         onclick="switchTab('projects')">
       <span class="anav-icon">🏗️</span><span class="anav-lbl">Projects</span>
@@ -46,22 +46,22 @@
       <span class="anav-icon">📦</span><span class="anav-lbl">Deliveries</span>
     </button>
     <button class="admin-tab" data-tab="by-project"       onclick="switchTab('by-project')">
-      <span class="anav-icon">📊</span><span class="anav-lbl">By Project</span>
+      <span class="anav-icon">📊</span><span class="anav-lbl">Reports</span>
     </button>
     <button class="admin-tab" data-tab="submissions"      onclick="switchTab('submissions')">
-      <span class="anav-icon">📋</span><span class="anav-lbl">Submissions</span>
+      <span class="anav-icon">📋</span><span class="anav-lbl">Activity</span>
     </button>
     <button class="admin-tab" data-tab="tm-equipment"     onclick="switchTab('tm-equipment')">
-      <span class="anav-icon">🔧</span><span class="anav-lbl">TM Equipment</span>
+      <span class="anav-icon">🔧</span><span class="anav-lbl">Equipment</span>
     </button>
     <button class="admin-tab" data-tab="rental"           onclick="switchTab('rental')">
-      <span class="anav-icon">🏗</span><span class="anav-lbl">Rental Scaffold</span>
+      <span class="anav-icon">🏗</span><span class="anav-lbl">Rentals</span>
     </button>
     <button class="admin-tab" data-tab="chats"            onclick="switchTab('chats')">
       <span class="anav-icon">💬</span><span class="anav-lbl">Chats</span>
     </button>
-    <button class="admin-tab admin-tab-link"              onclick="window.open('calendar.html','_blank')">
-      <span class="anav-icon">📅</span><span class="anav-lbl">Calendar ↗</span>
+    <button class="admin-tab" data-tab="calendar"         onclick="switchTab('calendar')">
+      <span class="anav-icon">📅</span><span class="anav-lbl">Calendar</span>
     </button>
   </div>
 </nav>
@@ -336,6 +336,16 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- ── Calendar Tab ─────────────────────────────────────────────────────── -->
+  <section class="admin-panel" id="tab-calendar">
+    <iframe
+      id="calendarFrame"
+      src="calendar.html"
+      style="width:100%;height:calc(100vh - 130px);border:none;border-radius:10px;display:block"
+      loading="lazy">
+    </iframe>
   </section>
 
 </main>

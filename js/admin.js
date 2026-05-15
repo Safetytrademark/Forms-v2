@@ -7,7 +7,7 @@ let adminAllProjects    = [];     // full list for assign modal
 let assignTarget        = null;   // { id, name } of the foreman being assigned
 
 // ── Valid tab IDs ─────────────────────────────────────────────────────────────
-const ADMIN_TABS = ['foremans','projects','documents','deliveries','by-project','submissions','tm-equipment','rental','chats'];
+const ADMIN_TABS = ['foremans','projects','documents','deliveries','by-project','submissions','tm-equipment','rental','chats','calendar'];
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
